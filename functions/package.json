@@ -1,0 +1,20 @@
+{
+  "name": "functions",
+  "description": "Cloud Functions for Firebase (Stripe Backend)",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^18.0.4",
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^4.9.0",
+    "stripe": "^15.0.0"
+  },
+  "private": true
+}

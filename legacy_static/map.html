@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="map.title">Interaktivní Mapa | Tedův východní svět</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Okamžitá aplikace tématu pro zamezení blikání
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #japan-map {
+            width: 100%;
+            height: 580px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            z-index: 1;
+        }
+
+        /* Dark map tiles filter pro CartoDB */
+        .leaflet-tile-pane {
+            filter: brightness(0.6) saturate(1.2) hue-rotate(170deg);
+        }
+
+        [data-theme="light"] .leaflet-tile-pane {
+            filter: none;
+        }
+
+        /* Custom marker style */
+        .custom-marker-icon {
+            background: var(--accent-color);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.4), 0 0 12px rgba(239, 35, 60, 0.8);
+            animation: markerPulse 1.8s ease-out infinite;
+        }
+
+        .custom-marker-icon.no-plans {
+            background: #666;
+            box-shadow: 0 0 0 3px rgba(100, 100, 100, 0.4), 0 0 8px rgba(100, 100, 100, 0.5);
+            animation: none;
+        }
+
+        @keyframes markerPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 3px rgba(239, 35, 60, 0.4), 0 0 12px rgba(239, 35, 60, 0.8);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(239, 35, 60, 0.1), 0 0 20px rgba(239, 35, 60, 0.5);
+            }
+        }
+
+        /* Leaflet popup custom style */
+        .leaflet-popup-content-wrapper {
+            background: rgba(15, 15, 25, 0.97) !important;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 12px !important;
+            color: #f0f6fc !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(15, 15, 25, 0.97) !important;
+        }
+
+        .leaflet-popup-content {
+            color: #f0f6fc;
+            font-family: 'Outfit', sans-serif;
+            min-width: 260px;
+        }
+
+        .popup-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .popup-plan {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .popup-plan:last-child {
+            border-bottom: none;
+        }
+
+        .popup-plan h4 {
+            font-size: 0.95rem;
+            margin: 0 0 0.3rem;
+            color: #f0f6fc;
+        }
+
+        .popup-plan .term {
+            font-size: 0.85rem;
+            color: rgba(220, 230, 240, 0.75);
+            margin: 0 0 0.5rem;
+        }
+
+        .popup-tag {
+            background: var(--accent-color);
+            color: white;
+            padding: 1px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .popup-reserve-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .popup-reserve-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .popup-route-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .popup-route-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .popup-no-plans {
+            text-align: center;
+            padding: 0.5rem 0;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .popup-no-plans i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><i class="fa-solid fa-torii-gate"></i> <span
+                    style="color: #ff66b2;">Tedův</span> <span style="color: var(--text-main);">východní</span> <span
+                    style="color: #ff3333;">svět</span></a>
+            <ul class="nav-links">
+                <li><a href="planner.html" data-i18n="nav.planner">Plánovač</a></li>
+                <li><a href="map.html" class="active" data-i18n="nav.map">Mapa</a></li>
+                <li><a href="gallery.html" data-i18n="nav.gallery">Galerie</a></li>
+
+                <li class="nav-dropdown">
+                    <a href="#" style="cursor: default;" data-i18n="nav.destinations">Destinace <i
+                            class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></a>
+                    <div class="nav-dropdown-content">
+                        <a href="japanese.html" data-i18n="nav.japanese">Japonsko</a>
+                        <a href="korea.html" data-i18n="nav.korea">Jižní Korea</a>
+                    </div>
+                </li>
+                <li class="nav-dropdown">
+                    <a href="#" style="cursor: default;" data-i18n="nav.languages">Jazyky <i
+                            class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></a>
+                    <div class="nav-dropdown-content">
+                        <a href="japonsky.html">🇯🇵 Japonština</a>
+                        <a href="korejsky.html">🇰🇷 Korejština</a>
+                    </div>
+                </li>
+                <li><a href="about.html" style="white-space: nowrap;" data-i18n="nav.about">O mně</a></li>
+                <li><a href="forum.html" data-i18n="nav.forum">Fórum</a></li>
+                <li><a href="contact.html" data-i18n="nav.contact">Kontakt</a></li>
+            </ul>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div id="nav-auth-container" style="display: flex; align-items: center; gap: 5px; margin-right: 5px;">
+                    <!-- Statické místo pro auth tlačítko pro zamezení skákání menu -->
+                    <button onclick="globalOpenLoginModal()" title="Přihlásit se" class="nav-login-btn"
+                        style="background: var(--accent-color); border: none; cursor: pointer; color: white; border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 700; font-family: inherit; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: opacity 0.2s;"
+                        data-i18n="nav.login"><i class="fa-solid fa-right-to-bracket"></i> Přihlásit se</button>
+                </div>
+                <a href="admin.html" class="theme-toggle"
+                    style="text-decoration: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;"
+                    title="Admin Login"><i class="fa-solid fa-user-lock"></i></a>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Přepnout motiv"><i
+                        class="fa-solid fa-sun"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="glass planner-header" style="margin-bottom: 2rem;">
+            <h2><i class="fa-solid fa-map-location-dot" style="color: var(--accent-color);"></i> <span
+                    data-i18n="map.header.title">Interaktivní mapa zájezdů</span></h2>
+            <p data-i18n="map.header.desc">Klikněte na svítící bod na mapě a zjistěte, které plány vás do tohoto místa
+                zavedou.</p>
+        </div>
+
+        <!-- Leaflet map container -->
+        <div id="japan-map"></div>
+    </main>
+
+    <footer style="margin-top: 4rem;">
+        <div class="footer-inner">
+            <p data-i18n="footer.rights">&copy; 2026 Tedův východní svět &mdash; Všechna práva vyhrazena.</p>
+            <div class="footer-social">
+                <a href="https://www.instagram.com/rikejmited/" target="_blank" rel="noopener noreferrer"
+                    aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://www.facebook.com/LeesinWrizz/" target="_blank" rel="noopener noreferrer"
+                    aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+                <a href="mailto:sykoratadeas2001@gmail.com" aria-label="E-mail"><i class="fa-solid fa-envelope"></i></a>
+                <a href="contact.html" aria-label="Kontakt"><i class="fa-solid fa-address-card"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Booking Modal -->
+    <div class="booking-modal" id="bookingModal">
+        <div class="glass modal-content">
+            <button class="close-modal" onclick="closeBooking()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-bottom: 0.5rem; color: var(--accent-color);">Rezervace zájezdu</h3>
+            <p id="modal-plan-info" style="margin-bottom: 2rem; font-weight: bold;"></p>
+            <form id="booking-form">
+                <input type="hidden" id="book-plan">
+                <input type="hidden" id="book-date">
+                <div class="form-group">
+                    <label for="book-name">Vaše Jméno</label>
+                    <input type="text" id="book-name" required placeholder="Jan Novák">
+                </div>
+                <div class="form-group">
+                    <label for="book-email">E-mailová adresa</label>
+                    <input type="email" id="book-email" required placeholder="jan@email.cz"
+                        pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$">
+                </div>
+                <div class="form-group">
+                    <label for="book-phone">Telefonní číslo</label>
+                    <input type="tel" id="book-phone" required placeholder="+420 123 456 789" pattern="^\+?[0-9\s]+$"
+                        oninput="this.value = this.value.replace(/[^0-9+\s]/g, '')">
+                </div>
+                <div class="form-group">
+                    <label for="book-message">Poznámka (Nepovinné)</label>
+                    <textarea id="book-message" rows="3" placeholder="Máte nějaké speciální požadavky?"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;"><i
+                        class="fa-solid fa-paper-plane"></i> Závazně Rezervovat</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="app.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script type="module">
+        import { db, isConfigured, collection, addDoc, serverTimestamp } from './firebase-config.js';
+
+        // --- Data ---
+        const plansDB = {
+            'Tokyo': {
+                lat: 35.6762, lng: 139.6503, plans: [
+                    { title: 'Japonsko na 15 dní', term: '14. 5. - 28. 5. 2026', tag: 'Poslední 2 místa!' },
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Garance odletu' },
+                    { title: 'Mezi mořem a horou (19 dní)', term: 'Dle výběru', tag: 'NOVINKA' },
+                    { title: 'Dvě Země: Japonsko & Jižní Korea (16 dní)', term: '1. 6. - 16. 6. 2026', tag: 'Rychle mizí!' },
+                    { title: 'Hon za sakurami (9 dní)', term: 'Březen/Duben', tag: 'Limitovaná edice' }
+                ]
+            },
+            'Kyoto': {
+                lat: 35.0116, lng: 135.7681, plans: [
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Garance odletu' },
+                    { title: 'Mezi mořem a horou (19 dní)', term: 'Dle výběru', tag: '' },
+                    { title: 'Dvě Země: Japonsko & Jižní Korea (16 dní)', term: '1. 6. - 16. 6. 2026', tag: '' }
+                ]
+            },
+            'Osaka': {
+                lat: 34.6937, lng: 135.5023, plans: [
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Garance odletu' },
+                    { title: 'Mezi mořem a horou (19 dní)', term: 'Dle výběru', tag: '' },
+                    { title: 'Dvě Země: Japonsko & Jižní Korea (16 dní)', term: '1. 6. - 16. 6. 2026', tag: '' }
+                ]
+            },
+            'Hiroshima': {
+                lat: 34.3853, lng: 132.4553, plans: [
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Garance odletu' },
+                    { title: 'Mezi mořem a horou (19 dní)', term: 'Dle výběru', tag: '' }
+                ]
+            },
+            'Soul (Seoul)': {
+                lat: 37.5665, lng: 126.9780, plans: [
+                    { title: 'Dvě Země: Japonsko & Jižní Korea (16 dní)', term: '1. 6. - 16. 6. 2026', tag: 'Exotika' }
+                ]
+            },
+            'Pusan (Busan)': {
+                lat: 35.1796, lng: 129.0756, plans: [
+                    { title: 'Dvě Země: Japonsko & Jižní Korea (16 dní)', term: '1. 6. - 16. 6. 2026', tag: 'Přístav' }
+                ]
+            },
+            'Čedžu (Jeju)': {
+                lat: 33.4996, lng: 126.5312, plans: [
+                    { title: 'Individuální plány', term: 'Na vyžádání', tag: 'Havaj Asie' }
+                ]
+            },
+            'Kanazawa': {
+                lat: 36.5944, lng: 136.6256, plans: [
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Historie' }
+                ]
+            },
+            'Kagoshima': {
+                lat: 31.5966, lng: 130.5571, plans: [
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Sopky' }
+                ]
+            },
+            'Nagasaki': {
+                lat: 32.7503, lng: 129.8777, plans: [
+                    { title: 'Individuální plány', term: 'Na vyžádání', tag: 'Místo s duší' }
+                ]
+            },
+            'Kumamoto': {
+                lat: 32.7898, lng: 130.7417, plans: [
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Hrad' }
+                ]
+            },
+            'Nara': {
+                lat: 34.6851, lng: 135.8048, plans: [
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Jelínci' },
+                    { title: 'Dvě Země: Japonsko & Jižní Korea (16 dní)', term: '1. 6. - 16. 6. 2026', tag: '' }
+                ]
+            },
+            'Okinawa (Naha)': {
+                lat: 26.2124, lng: 127.6809, plans: [
+                    { title: 'Mezi mořem a horou (19 dní)', term: 'Dle výběru', tag: 'Pláže' }
+                ]
+            },
+            'Fuji (Kawaguchiko)': {
+                lat: 35.5031, lng: 138.7679, plans: [
+                    { title: 'Ohnivé hory a zlaté chrámy (22 dní)', term: '5. 4. - 26. 4. 2026', tag: 'Ikona' },
+                    { title: 'Mezi mořem a horou (19 dní)', term: 'Dle výběru', tag: '' }
+                ]
+            },
+            'Kamakura': {
+                lat: 35.3192, lng: 139.5467, plans: [
+                    { title: 'Hon za sakurami (9 dní)', term: 'Březen/Duben', tag: 'Buddha' }
+                ]
+            },
+            'Yokohama': {
+                lat: 35.4433, lng: 139.6380, plans: [
+                    { title: 'Hon za sakurami (9 dní)', term: 'Březen/Duben', tag: 'Moderní' }
+                ]
+            },
+            'Sapporo': { lat: 43.0618, lng: 141.3545, plans: [] },
+        };
+
+        // --- Definice tras zájezdů ---
+        const tourRoutes = {
+            'Japonsko na 15 dní': ['Tokyo', 'Fuji (Kawaguchiko)', 'Kyoto', 'Nara', 'Osaka', 'Hiroshima'],
+            'Ohnivé hory a zlaté chrámy (22 dní)': ['Tokyo', 'Fuji (Kawaguchiko)', 'Kanazawa', 'Kyoto', 'Nara', 'Osaka', 'Hiroshima', 'Kumamoto', 'Kagoshima'],
+            'Mezi mořem a horou (19 dní)': ['Tokyo', 'Fuji (Kawaguchiko)', 'Kyoto', 'Osaka', 'Hiroshima', 'Okinawa (Naha)'],
+            'Dvě Země: Japonsko & Jižní Korea (16 dní)': ['Tokyo', 'Kyoto', 'Osaka', 'Nara', 'Pusan (Busan)', 'Soul (Seoul)'],
+            'Hon za sakurami (9 dní)': ['Tokyo', 'Yokohama', 'Kamakura']
+        };
+
+        // Proměnná pro uložení aktuální trasy na mapě
+        let currentPolyline = null;
+
+        window.drawRoute = function (tourTitle) {
+            if (currentPolyline) {
+                map.removeLayer(currentPolyline);
+                currentPolyline = null;
+            }
+
+            const routeCities = tourRoutes[tourTitle];
+            if (!routeCities || routeCities.length < 2) return;
+
+            const latlngs = routeCities.map(city => {
+                const c = plansDB[city];
+                return c ? [c.lat, c.lng] : null;
+            }).filter(Boolean);
+
+            if (latlngs.length > 1) {
+                // Vytvoření čáry s prémiovým designem (tečkovaná / čárkovaná animovatelná čára)
+                currentPolyline = L.polyline(latlngs, {
+                    color: '#f05a28',
+                    weight: 4,
+                    dashArray: '10, 10',
+                    lineCap: 'round',
+                    lineJoin: 'round',
+                    opacity: 0.8
+                }).addTo(map);
+
+                // Přiblížení mapy tak, aby obsáhla celou trasu s trochou paddingu
+                map.fitBounds(currentPolyline.getBounds(), { padding: [50, 50], maxZoom: 7, animate: true, duration: 1.5 });
+            }
+        };
+
+        // --- Init Leaflet Map ---
+        const map = L.map('japan-map', {
+            center: [36.5, 137.5],
+            zoom: 5,
+            zoomControl: true,
+            scrollWheelZoom: true,
+            minZoom: 4,
+            maxZoom: 12
+        });
+
+        // --- CartoDB Map Tiles ---
+        const CARTO_API_KEY = "cb1_3uzm_1_4767ad8acc9bf6ee2987ae8b";
+        const keyParam = CARTO_API_KEY ? `?key=${CARTO_API_KEY}` : '';
+
+        const darkTiles = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png${keyParam}`;
+        const lightTiles = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png${keyParam}`;
+
+        function getCurrentTileUrl() {
+            return document.documentElement.getAttribute('data-theme') === 'light' ? lightTiles : darkTiles;
+        }
+
+        let tileLayer = L.tileLayer(getCurrentTileUrl(), {
+            maxZoom: 19,
+            subdomains: 'abcd'
+        }).addTo(map);
+
+        // Sledovat změnu tématu a aktualizovat mapu
+        const observer = new MutationObserver(() => {
+            const newUrl = getCurrentTileUrl();
+            if (tileLayer._url !== newUrl) {
+                map.removeLayer(tileLayer);
+                tileLayer = L.tileLayer(newUrl, { maxZoom: 19, subdomains: 'abcd' }).addTo(map);
+                tileLayer.bringToBack();
+            }
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+        // --- Marker factory ---
+        function makeIcon(hasPlans) {
+            return L.divIcon({
+                className: '',
+                html: `<div class="custom-marker-icon${hasPlans ? '' : ' no-plans'}"></div>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9],
+                popupAnchor: [0, -12]
+            });
+        }
+
+        const _t = (key, fb) => window.i18n && window.i18n.t ? window.i18n.t(key, fb) : fb;
+
+        let markersLayer = L.layerGroup().addTo(map);
+
+        function renderMarkers() {
+            markersLayer.clearLayers();
+
+            // --- Add markers ---
+            Object.entries(plansDB).forEach(([city, data]) => {
+                const hasPlans = data.plans.length > 0;
+                const marker = L.marker([data.lat, data.lng], { icon: makeIcon(hasPlans) });
+
+                let popupHtml = `<div class="popup-title"><i class="fa-solid fa-location-dot"></i> ${city}</div>`;
+
+                const cityDesc = _t(`map.cities.${city}.desc`, "");
+                if (cityDesc) {
+                    popupHtml += `<p style="font-size: 0.9rem; margin-bottom: 0.8rem; line-height: 1.4; color: rgba(255,255,255,0.85);">${cityDesc}</p>`;
+                    popupHtml += `<div style="margin-bottom: 1rem;"><a href="japanese.html#cities" style="color: var(--accent-color); font-size: 0.85rem; text-decoration: none; font-weight: 600;"><i class="fa-solid fa-arrow-right"></i> ${_t('map.readMore', 'Číst více')}</a></div>`;
+                }
+
+                if (hasPlans) {
+                    data.plans.forEach(p => {
+                        popupHtml += `
+                        <div class="popup-plan">
+                            <h4>${p.title}</h4>
+                            <p class="term"><i class="fa-regular fa-calendar"></i> ${p.term}</p>
+                            ${p.tag ? `<span class="popup-tag">${p.tag}</span><br>` : ''}
+                            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                <button class="popup-reserve-btn" style="flex: 1;" onclick="window.openBooking('${p.title}', '${p.term}')">
+                                    <i class="fa-solid fa-check"></i> ${_t('map.popup.reserve', 'Rezervovat')}
+                                </button>
+                                ${tourRoutes[p.title] ? `
+                                <button class="popup-route-btn" style="flex: 1;" onclick="window.drawRoute('${p.title}')" title="Ukázat trasu na mapě">
+                                    <i class="fa-solid fa-route"></i> Trasovat
+                                </button>
+                                ` : ''}
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    popupHtml += `
+                    <div class="popup-no-plans">
+                        <i class="fa-solid fa-plane-slash"></i>
+                        <strong>${_t('map.popup.noPlans', 'Sem teď nejezdíme')}</strong>
+                        <p style="font-size:0.85rem; margin-top: 0.3rem;">${_t('map.popup.noPlansDesc', `Do ${city} aktuálně žádný zájezd nemáme. Vyberte jiné město!`).replace('{city}', city)}</p>
+                    </div>`;
+                }
+
+                marker.bindPopup(popupHtml, {
+                    maxWidth: 300,
+                    minWidth: 220,
+                    className: 'custom-popup',
+                    offset: [0, -10]
+                });
+
+                markersLayer.addLayer(marker);
+            });
+        }
+
+        // Render initially (if translations are already loaded somehow) and on change
+        if (window.i18n && window.i18n.isLoaded && window.i18n.isLoaded()) {
+            renderMarkers();
+        }
+        window.addEventListener('languageChanged', renderMarkers);
+
+        // --- Booking modal logic ---
+        window.openBooking = function (planName, planDate) {
+            document.getElementById('book-plan').value = planName;
+            document.getElementById('book-date').value = planDate;
+            document.getElementById('modal-plan-info').innerHTML =
+                `<i class="fa-solid fa-map-location-dot"></i> ${planName}<br><i class="fa-regular fa-calendar"></i> ${planDate}`;
+            document.getElementById('bookingModal').classList.add('active');
+        };
+
+        window.closeBooking = function () {
+            document.getElementById('bookingModal').classList.remove('active');
+            document.getElementById('booking-form').reset();
+        };
+
+        document.getElementById('booking-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerHTML;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Odesílám...";
+            btn.disabled = true;
+
+            const formData = {
+                name: document.getElementById('book-name').value,
+                email: document.getElementById('book-email').value,
+                phone: document.getElementById('book-phone').value,
+                interest: document.getElementById('book-plan').value,
+                dateObj: document.getElementById('book-date').value,
+                message: document.getElementById('book-message').value,
+                date: new Date().toISOString()
+            };
+
+            try {
+                fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        access_key: "6705e9e6-2ced-4d72-9b02-95f2a0e1a1fc",
+                        subject: `Nová rezervace: ${formData.interest}`,
+                        from_name: formData.name,
+                        replyto: formData.email,
+                        message: `NOVÁ REZERVACE\n\nJméno: ${formData.name}\nE-mail: ${formData.email}\nTelefon: ${formData.phone}\nPlán: ${formData.interest}\nTermín: ${formData.dateObj}\nPoznámka: ${formData.message}`
+                    })
+                }).catch(err => console.log("Email err:", err));
+
+                if (isConfigured) {
+                    await addDoc(collection(db, "orders"), { ...formData, createdAt: serverTimestamp() });
+                } else {
+                    let orders = JSON.parse(localStorage.getItem('test_orders') || '[]');
+                    orders.push(formData);
+                    localStorage.setItem('test_orders', JSON.stringify(orders));
+                }
+                alert('Děkujeme za rezervaci! Brzy se vám ozveme.');
+                closeBooking();
+            } catch (err) {
+                console.error(err);
+                alert('Něco se pokazilo. Zkuste to znovu.');
+            } finally {
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }
+        });
+    </script>
+    <script type="module" src="global-auth.js"></script>
+</body>
+
+</html>

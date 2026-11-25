@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Globální nastavení: Ve výchozím stavu nesmí nikdo zapisovat
+    
+    // Zájezdy (Itineráře)
+    match /itineraries/{document=**} {
+      // Číst mohou všichni (aby se stránka načetla návštěvníkům)
+      allow read: if true;
+      // Vytvořit vlastní itinerář může přihlášený uživatel, upravovat/mazat může jen admin
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.token.email == 'sykoratadeas2001@gmail.com';
+    }
+    
+    // Galerie
+    match /gallery/{document=**} {
+      allow read: if true;
+      // Přihlášený uživatel může sdílet fotku v galerii, upravovat/mazat může jen admin
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.token.email == 'sykoratadeas2001@gmail.com';
+    }
+    
+    // Uživatelé
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    // Fórum
+    match /forum_threads/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null; // Přihlášený uživatel může psát do fóra
+    }
+    
+    // Rezervace
+    match /reservations/{resId} {
+      // Uživatel vidí jen své rezervace, admin vidí všechny
+      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || request.auth.token.email == 'sykoratadeas2001@gmail.com');
+      // Uživatel může vytvářet, pokud uid odpovídá
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Admin může upravovat/mazat
+      allow update, delete: if request.auth != null && request.auth.token.email == 'sykoratadeas2001@gmail.com';
+    }
+
+    // Recenze
+    match /reviews/{reviewId} {
+      // Kdokoliv může číst recenze
+      allow read: if true;
+      // Přihlášený uživatel může napsat recenzi pod svým jménem
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Admin může mazat (moderace)
+      allow update, delete: if request.auth != null && request.auth.token.email == 'sykoratadeas2001@gmail.com';
+    }
+  }
+}

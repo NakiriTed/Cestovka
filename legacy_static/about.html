@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="about.title">O mně | Tedův východní svět</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Okamžitá aplikace tématu pro zamezení blikání
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <style>
+        .about-wrap {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 3rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .about-wrap {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .profile-card {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .profile-img-wrap {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 1.5rem auto;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid var(--accent-color);
+        }
+
+        .profile-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .social-links a {
+            color: var(--text-main);
+            font-size: 1.8rem;
+            transition: transform 0.3s, color 0.3s;
+        }
+
+        .social-links a:hover {
+            color: var(--accent-color);
+            transform: scale(1.2);
+        }
+
+        .about-content {
+            padding: 3rem;
+        }
+
+        .timeline {
+            margin-top: 2rem;
+            border-left: 2px solid var(--glass-border);
+            padding-left: 2rem;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -37px;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            border: 4px solid var(--bg-color);
+        }
+
+        .timeline-item h4 {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+            <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><i class="fa-solid fa-torii-gate"></i> <span style="color: #ff66b2;">Tedův</span> <span style="color: var(--text-main);">východní</span> <span style="color: #ff3333;">svět</span></a>
+            <ul class="nav-links">
+                <li><a href="planner.html" data-i18n="nav.planner">Plánovač</a></li>
+                <li><a href="map.html" data-i18n="nav.map">Mapa</a></li>
+                <li><a href="gallery.html" data-i18n="nav.gallery">Galerie</a></li>
+
+                <li class="nav-dropdown">
+                    <a href="#" style="cursor: default;"  data-i18n="nav.destinations">Destinace <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></a>
+                    <div class="nav-dropdown-content">
+                        <a href="japanese.html"  data-i18n="nav.japanese">Japonsko</a>
+                        <a href="korea.html"  data-i18n="nav.korea">Jižní Korea</a>
+                    </div>
+                </li>
+                <li class="nav-dropdown">
+                    <a href="#" style="cursor: default;"  data-i18n="nav.languages">Jazyky <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></a>
+                    <div class="nav-dropdown-content">
+                        <a href="japonsky.html" >🇯🇵 Japonština</a>
+                        <a href="korejsky.html" >🇰🇷 Korejština</a>
+                    </div>
+                </li>
+                <li><a href="about.html" class="active" data-i18n="nav.about">O mně</a></li>
+                <li><a href="forum.html" data-i18n="nav.forum">Fórum</a></li>
+                <li><a href="contact.html" data-i18n="nav.contact">Kontakt</a></li>
+            </ul>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div id="nav-auth-container" style="display: flex; align-items: center; gap: 5px; margin-right: 5px;">
+                    <!-- Statické místo pro auth tlačítko pro zamezení skákání menu -->
+                    <button onclick="globalOpenLoginModal()" title="Přihlásit se" class="nav-login-btn" style="background: var(--accent-color); border: none; cursor: pointer; color: white; border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 700; font-family: inherit; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: opacity 0.2s;" data-i18n="nav.login"><i class="fa-solid fa-right-to-bracket"></i> Přihlásit se</button>
+                </div>
+                <a href="admin.html" class="theme-toggle" style="text-decoration: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;" title="Admin Login"><i class="fa-solid fa-user-lock"></i></a>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Přepnout motiv"><i class="fa-solid fa-sun"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="about-wrap">
+
+            <div class="glass profile-card">
+                <div class="profile-img-wrap">
+                    <!-- Profilový obrázek -->
+                    <img src="https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=400&auto=format&fit=crop"
+                        alt="Profilová fotka" id="profile-picture">
+                </div>
+                <h3>Tadeáš</h3>
+                <p style="margin-top: 0.5rem; color: var(--accent-color); font-weight: 600;" data-i18n="about.role">Zakladatel &amp; Průvodce</p>
+                <div class="social-links">
+                    <a href="https://www.instagram.com/rikejmited/" aria-label="Instagram"><i
+                            class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+                </div>
+            </div>
+
+            <div class="glass about-content">
+                <h2 data-i18n="about.bioTitle">Moje já</h2>
+                <p style="margin-bottom: 1.5rem;" data-i18n="about.bio">Ahoj! Jmenuju se Tadeáš a vítám tě na mém webu o Japonsku a dalších
+                    zemích.
+                    Je mi 24 let a momentálně studuji Web design na univerzitě v Pardubicích.
+                    Už od mala mě fascinovala Asie a rozhodl jsem se, že se o své zážitky podělím s ostatními.
+                    Vidět Japonsko na vlastní oči pro mě byl splněný sen a ihned po mé první návštěvě jsem věděl, že se
+                    tam budu vracet.
+                    Po uspořádání pár cest pro kamarády jsem se rozhodl, že se o své zážitky podělím s ostatními a
+                    založil jsem tento web.
+                    V roce 2023 jsem byl v Japonsku poprvé s mým kamarádem Tomášem.
+                    V roce 2024 s mými kamarády Matějem a Vojtou.
+                    Zlom však nastal v roce 2025, kde jsem naplánoval dovolenou pro více než 8 lidí a vše měl na starost.
+
+                </p>
+
+                <h3 style="margin-top: 3rem;" data-i18n="about.travelTitle">Kde všude jsem už vlastně byl?</h3>
+                <p style="margin-bottom: 1.5rem;" data-i18n="about.travelDesc">Těch zemí bylo opravdu spousta, ale na tyhle vzpomínám nejradši:
+                </p>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h4 data-i18n="about.japan.name">Japonsko</h4>
+                        <p data-i18n="about.japan.desc">Nikoho asi nepřekvapí to, že na prvním místě se umístilo Japonsko. Už od 14 let to byl můj
+                            sen. Začalo to vše přes anime, mangu
+                            až po japonský filmy a písničky. Teď se i japonsky učím a plánuji se vydat na cestu
+                            Japanologie.
+                        </p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4 data-i18n="about.vietnam.name">Vietnam</h4>
+                        <p data-i18n="about.vietnam.desc">Vietnam je země s neuvěřitelnou historií a kulturou. Byl jsem zde v roce 2026 a rozhodně bych
+                            se vrátil!</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h4 data-i18n="about.korea.name">Jižní Korea </h4>
+                        <p data-i18n="about.korea.desc">Země se skvělým mixem rychlého životního tempa a unikátní estetiky. Perfektní doplněk pro
+                            každou větší asijskou cestu.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer style="margin-top: 4rem;">
+        <div class="footer-inner">
+            <p data-i18n="footer.rights">&copy; 2026 Tedův východní svět &mdash; Všechna práva vyhrazena.</p>
+            <div class="footer-social">
+                <a href="https://www.instagram.com/rikejmited/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://www.facebook.com/LeesinWrizz/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+                <a href="mailto:sykoratadeas2001@gmail.com" aria-label="E-mail"><i class="fa-solid fa-envelope"></i></a>
+                <a href="contact.html" aria-label="Kontakt"><i class="fa-solid fa-address-card"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="i18n.js"></script>
+    <script src="app.js"></script>
+    <script type="module" src="global-auth.js"></script>
+</body>
+
+</html>
+
+

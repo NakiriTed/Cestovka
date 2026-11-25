@@ -1,0 +1,241 @@
+﻿<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="thread.title">Téma | Tedův východní svět</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Okamžitá aplikace tématu pro zamezení blikání
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <style>
+        body { background: var(--bg-color); }
+        .thread-wrap { max-width: 900px; margin: 0 auto; padding: 8rem 2rem 4rem 2rem; }
+        
+        .original-post { padding: 2rem; margin-bottom: 2rem; border-left: 4px solid var(--accent-color); }
+        .original-post h1 { margin-bottom: 1rem; font-size: 2rem; }
+        .post-meta { display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; align-items: center; }
+        .post-content { line-height: 1.6; font-size: 1.1rem; white-space: pre-wrap; }
+
+        .comments-section h3 { margin-bottom: 1.5rem; }
+        .comment { display: flex; gap: 1rem; padding: 1.5rem; margin-bottom: 1rem; }
+        .comment-avatar { font-size: 2rem; width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .comment-main { flex: 1; }
+        .comment-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .comment-author { font-weight: bold; color: var(--accent-color); }
+        .comment-date { color: var(--text-muted); }
+        .comment-text { line-height: 1.5; white-space: pre-wrap; }
+
+        .reply-box { margin-top: 2rem; padding: 2rem; }
+        .reply-box textarea { width: 100%; height: 100px; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; resize: vertical; }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><i class="fa-solid fa-torii-gate"></i> <span style="color: #ff66b2;">Tedův</span> <span style="color: var(--text-main);">východní</span> <span style="color: #ff3333;">svět</span></a>
+            <ul class="nav-links">
+                <li><a href="planner.html" data-i18n="nav.planner">Plánovač</a></li>
+                <li><a href="map.html" data-i18n="nav.map">Mapa</a></li>
+                <li><a href="gallery.html" data-i18n="nav.gallery">Galerie</a></li>
+
+                <li class="nav-dropdown">
+                    <a href="#" style="cursor: default;"  data-i18n="nav.destinations">Destinace <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></a>
+                    <div class="nav-dropdown-content">
+                        <a href="japanese.html"  data-i18n="nav.japanese">Japonsko</a>
+                        <a href="korea.html"  data-i18n="nav.korea">Jižní Korea</a>
+                    </div>
+                </li>
+                <li class="nav-dropdown">
+                    <a href="#" style="cursor: default;"  data-i18n="nav.languages">Jazyky <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></a>
+                    <div class="nav-dropdown-content">
+                        <a href="japonsky.html" >🇯🇵 Japonština</a>
+                        <a href="korejsky.html" >🇰🇷 Korejština</a>
+                    </div>
+                </li>
+                <li><a href="about.html" style="white-space: nowrap;" data-i18n="nav.about">O mně</a></li>
+                <li><a href="forum.html" class="active" data-i18n="nav.forum">Fórum</a></li>
+                <li><a href="contact.html" data-i18n="nav.contact">Kontakt</a></li>
+            </ul>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div id="nav-auth-container" style="display: flex; align-items: center; gap: 5px; margin-right: 5px;">
+                    <!-- Statické místo pro auth tlačítko pro zamezení skákání menu -->
+                    <button onclick="globalOpenLoginModal()" title="Přihlásit se" class="nav-login-btn" style="background: var(--accent-color); border: none; cursor: pointer; color: white; border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 700; font-family: inherit; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: opacity 0.2s;" data-i18n="nav.login"><i class="fa-solid fa-right-to-bracket"></i> Přihlásit se</button>
+                </div>
+                <a href="admin.html" class="theme-toggle" style="text-decoration: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;"><i class="fa-solid fa-user-lock"></i></a>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Přepnout motiv"><i class="fa-solid fa-sun"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="thread-wrap">
+        <a href="forum.html" style="color: var(--text-muted); text-decoration: none; display: inline-block; margin-bottom: 1rem;"><i class="fa-solid fa-arrow-left"></i> Zpět na fórum</a>
+        
+        <div id="thread-content-area">
+            <div class="glass" style="padding: 2rem; text-align: center;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem;"></i></div>
+        </div>
+
+        <div class="comments-section">
+            <h3>Komentáře</h3>
+            <div id="comments-container"></div>
+            
+            <div class="glass reply-box" id="reply-box-container">
+                <p style="text-align: center; color: var(--text-muted);">Musíte být přihlášeni, abyste mohli odpovědět.</p>
+                <a href="forum.html" class="btn btn-cms" style="display: block; width: max-content; margin: 1rem auto 0;">Zpět na fórum a přihlásit se</a>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db, auth, isConfigured, doc, getDoc, collection, query, where, orderBy, getDocs, addDoc, updateDoc, onAuthStateChanged, increment } from './firebase-config.js';
+
+        // Přecházíme na fragment (hash) místo query parameteru. Místní server "serve" občas na windowsech přesměruje thread.html na /thread a zahodí query string. Hash se odesílá vždy!
+        const threadId = window.location.hash ? window.location.hash.substring(1) : null;
+        let currentUser = null;
+
+        if(!threadId) {
+            document.getElementById('thread-content-area').innerHTML = `
+                <div class="glass" style="padding: 2rem; text-align: center; color: red;">
+                    <h3>Chyba načítání (Chybí ID)</h3>
+                    <p>Nebylo předáno ID vlákna!</p>
+                    <p style="margin-top: 15px; font-size: 0.8rem; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px;">
+                        <strong>Debug: Prohlížeč vidí adresu jako:</strong><br>${window.location.href}
+                    </p>
+                </div>
+            `;
+        } else {
+            document.addEventListener('DOMContentLoaded', loadThreadAndComments);
+            // Zavoláme i rovnou pro jistotu, pokud už DOMContentLoaded proběhlo
+            if(document.readyState === "interactive" || document.readyState === "complete") {
+                loadThreadAndComments();
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if(user) {
+                document.getElementById('reply-box-container').innerHTML = `
+                    <h4>Napsat odpověď</h4>
+                    <form id="reply-form">
+                        <textarea id="reply-text" placeholder="Vaše odpověď..." required></textarea>
+                        <button type="submit" class="btn btn-primary" style="float: right;">Odeslat</button>
+                        <div style="clear: both;"></div>
+                    </form>
+                `;
+                document.getElementById('reply-form').onsubmit = handleReplySubmit;
+            }
+        });
+
+        async function loadThreadAndComments() {
+            if(!isConfigured) return;
+            try {
+                // Načíst Vlákno
+                const tSnap = await getDoc(doc(db, "forum_threads", threadId));
+                if(!tSnap.exists()) {
+                    document.getElementById('thread-content-area').innerHTML = '<p>Toto téma neexistuje nebo bylo smazáno.</p>';
+                    return;
+                }
+                const t = tSnap.data();
+                const dStr = t.createdAt ? new Date(t.createdAt).toLocaleString('cs-CZ') : '';
+
+                // Načíst všechny profily pro mapování
+                const uQuery = await getDocs(collection(db, "users"));
+                const userProfiles = {};
+                uQuery.forEach(u => userProfiles[u.id] = u.data());
+
+                const threadAuthorProf = userProfiles[t.authorUid];
+                const threadAvatarHtml = threadAuthorProf?.avatarUrl ? `<img src="${threadAuthorProf.avatarUrl}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:5px;">` : `<i class="fa-solid fa-user"></i>`;
+
+                document.getElementById('thread-content-area').innerHTML = `
+                    <div class="glass original-post">
+                        <div class="post-meta">
+                            <span style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 4px;">${t.category}</span>
+                            <span><a href="profile.html?uid=${t.authorUid}" style="color:var(--text-main); text-decoration:none;">${threadAvatarHtml} <strong>${t.authorName}</strong></a></span>
+                            <span><i class="fa-regular fa-clock"></i> ${dStr}</span>
+                        </div>
+                        <h1>${t.title}</h1>
+                        <div class="post-content">${t.content}</div>
+                    </div>
+                `;
+
+                // Načíst Komentáře
+                const cQuery = query(collection(db, "forum_comments"), where("threadId", "==", threadId), orderBy("createdAt", "asc"));
+                const cSnap = await getDocs(cQuery);
+                let commentsHtml = "";
+                
+                cSnap.forEach(d => {
+                    const c = d.data();
+                    const cDate = c.createdAt ? new Date(c.createdAt).toLocaleString('cs-CZ') : '';
+                    const isOp = c.authorUid === t.authorUid ? '<span class="mod-tag" style="padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px;">Autor tématu</span>' : '';
+                    
+                    const cAuthorProf = userProfiles[c.authorUid];
+                    const cAvatarHtml = cAuthorProf?.avatarUrl 
+                        ? `<img src="${cAuthorProf.avatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
+                        : `<i class="fa-solid fa-user"></i>`;
+
+                    commentsHtml += `
+                        <div class="glass comment">
+                            <a href="profile.html?uid=${c.authorUid}" class="comment-avatar" style="text-decoration:none; color:var(--text-muted); display:flex; align-items:center; justify-content:center; overflow:hidden;">${cAvatarHtml}</a>
+                            <div class="comment-main">
+                                <div class="comment-header">
+                                    <span class="comment-author"><a href="profile.html?uid=${c.authorUid}" style="color:var(--accent-color); text-decoration:none;">${c.authorName}</a> ${isOp}</span>
+                                    <span class="comment-date">${cDate}</span>
+                                </div>
+                                <div class="comment-text">${c.content}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('comments-container').innerHTML = commentsHtml || '<p style="color:var(--text-muted); margin-bottom: 2rem;">Zatím žádné komentáře. Buďte první!</p>';
+
+            } catch(e) {
+                console.error("Chyba:", e);
+                // Index alert
+                if(e.message && e.message.includes('index')) {
+                    alert('POZOR: Firebase vyžaduje vytvoření indexu pro toto dotazování (kategorie + sortování). Koukněte do konzole na link!');
+                }
+            }
+        }
+
+        async function handleReplySubmit(e) {
+            e.preventDefault();
+            if(!currentUser) return;
+            const text = document.getElementById('reply-text').value;
+            
+            try {
+                await addDoc(collection(db, "forum_comments"), {
+                    threadId: threadId,
+                    content: text,
+                    authorName: currentUser.displayName || currentUser.email.split('@')[0],
+                    authorUid: currentUser.uid,
+                    createdAt: new Date().toISOString()
+                });
+                
+                // Zvýšit počet odpovědí ve vlákně (Může selhat u lokálního mocku, takže try/catch nahoře)
+                await updateDoc(doc(db, "forum_threads", threadId), {
+                    repliesCount: increment(1)
+                });
+
+                document.getElementById('reply-form').reset();
+                loadThreadAndComments();
+            } catch(e) {
+                alert("Nelze přidat komentář: " + e.message);
+            }
+        }
+
+    </script>
+    <script src="i18n.js"></script>
+    <script src="app.js"></script>
+    <script type="module" src="global-auth.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="planner.title">Plánovač zájezdů | Tedův východní svět</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Okamžitá aplikace tématu pro zamezení blikání
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="index.html" class="logo"><i class="fa-solid fa-torii-gate"></i> <span
+                    style="color: #ff66b2;">Tedův</span> <span style="color: var(--text-main);">východní</span> <span
+                    style="color: #ff3333;">svět</span></a>
+            <ul class="nav-links">
+                <li><a href="planner.html" class="active" data-i18n="nav.planner">Plánovač</a></li>
+                <li><a href="map.html" data-i18n="nav.map">Mapa</a></li>
+                <li><a href="gallery.html" data-i18n="nav.gallery">Galerie</a></li>
+
+                <li class="nav-dropdown">
+                    <a href="#" style="cursor: default;"  data-i18n="nav.destinations">Destinace <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></a>
+                    <div class="nav-dropdown-content">
+                        <a href="japanese.html"  data-i18n="nav.japanese">Japonsko</a>
+                        <a href="korea.html"  data-i18n="nav.korea">Jižní Korea</a>
+                    </div>
+                </li>
+                <li class="nav-dropdown">
+                    <a href="#" style="cursor: default;"  data-i18n="nav.languages">Jazyky <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></a>
+                    <div class="nav-dropdown-content">
+                        <a href="japonsky.html" >🇯🇵 Japonština</a>
+                        <a href="korejsky.html" >🇰🇷 Korejština</a>
+                    </div>
+                </li>
+                <li><a href="about.html" style="white-space: nowrap;" data-i18n="nav.about">O mně</a></li>
+                <li><a href="forum.html" data-i18n="nav.forum">Fórum</a></li>
+                <li><a href="contact.html" data-i18n="nav.contact">Kontakt</a></li>
+            </ul>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div id="nav-auth-container" style="display: flex; align-items: center; gap: 5px; margin-right: 5px;">
+                    <!-- Statické místo pro auth tlačítko pro zamezení skákání menu -->
+                    <button onclick="globalOpenLoginModal()" title="Přihlásit se" class="nav-login-btn" style="background: var(--accent-color); border: none; cursor: pointer; color: white; border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; font-weight: 700; font-family: inherit; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: opacity 0.2s;" data-i18n="nav.login"><i class="fa-solid fa-right-to-bracket"></i> Přihlásit se</button>
+                </div>
+                <a href="admin.html" class="theme-toggle"
+                    style="text-decoration: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;"
+                    title="Admin Login"><i class="fa-solid fa-user-lock"></i></a>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Přepnout motiv"><i
+                        class="fa-solid fa-sun"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="planner-wrap">
+        <div class="glass planner-header">
+            <h2 data-i18n="planner.header.title">Vyberte si váš vysněný plán</h2>
+            <p data-i18n="planner.header.desc">Připravili jsme pro vás detailní itineráře včetně ukázky nákladů. Inspirujte se a vydejte se s námi na
+                cestu.</p>
+        </div>
+
+        <div class="itinerary-section">
+            <!-- NOVÝ FILTROVACÍ PANEL -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="applyFilter('vše')" data-i18n="planner.filters.all">Vše</button>
+                    <button class="filter-btn" onclick="applyFilter('pro nováčky')" data-i18n="planner.filters.beginners">Pro nováčky</button>
+                    <button class="filter-btn" onclick="applyFilter('zábava')" data-i18n="planner.filters.fun">Zábava</button>
+                    <button class="filter-btn" onclick="applyFilter('poznávací')" data-i18n="planner.filters.educational">Poznávací</button>
+                    <button class="filter-btn" onclick="applyFilter('adrenalin')" data-i18n="planner.filters.adrenaline">Adrenalin</button>
+                    <button class="filter-btn" id="wishlist-filter-btn" onclick="applyFilter('oblíbené')"><i class="fa-solid fa-heart" style="color:#e74c3c;"></i> <span data-i18n="planner.filters.favorites">Oblíbené</span></button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-sort-amount-down" style="color: var(--accent-color);"></i>
+                    <select class="sort-select" onchange="applySort(this.value)">
+                        <option value="default" data-i18n="planner.sort.recommended">Doporučené</option>
+                        <option value="price-asc" data-i18n="planner.sort.cheapest">Nejlevnější</option>
+                        <option value="price-desc" data-i18n="planner.sort.expensive">Nejdražší</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dynamický kontejner pro itineráře -->
+            <div id="itineraries-row" style="display: flex; flex-direction: column; gap: 4rem;">
+                <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 1rem;">Načítám aktuální plány zájezdů...</p>
+                </div>
+            </div>
+
+
+
+
+
+            <!-- FAQ Section -->
+            <section class="faq-section" id="faq">
+                <h2 style="color: var(--text-main);"><i class="fa-solid fa-circle-question"></i> Často kladené dotazy
+                </h2>
+
+                <details class="faq-item">
+                    <summary>Potřebuji víza (Japonsko / Korea)?</summary>
+                    <p><strong>Japonsko:</strong> Pro občany ČR i SR platí bezvízový styk pro turistické pobyty do 90
+                        dnů. Stačí platný cestovní pas.<br><br>
+                        <strong>Jižní Korea:</strong> Aktuálně platí pro občany ČR i SR výjimka z povinnosti registrace
+                        K-ETA (do konce roku 2024), tedy stačí také jen platný pas. Situace se však může měnit, vždy vás
+                        včas informujeme.
+                    </p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Do jak velké skupiny budu zařazen/a?</summary>
+                    <p>Naše zájezdy jsou pro malé skupiny, obvykle <strong>vždy 8 až 12 osob</strong>. Lze však udělat
+                        výjimky – například pokud jedou 3 páry a k tomu jedna velká rodina, budou samozřejmě v jedné
+                        skupině pospolu. Nemáme problém ani s jednotlivci, jen je potřeba počítat s lehce vyšší cenou,
+                        pokud budete vyžadovat vlastní pokoj.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Jak náročný je program fyzicky?</summary>
+                    <p>Naše zájezdy mají obtížnost zhruba 2/5. Přesto počítejte s tím, že se nachodí <strong>minimálně
+                            15 kilometrů denně</strong>. K dopravě používáme často městskou hromadnou dopravu (vlaky,
+                        metro), takže schodům a přesunům pěšky se nevyhneme.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Mohu platit všude kartou, nebo potřebuji hotovost (yeny)?</summary>
+                    <p>Japonsko prošlo obrovským posunem k bezhotovostním platbám, nicméně stále <strong>potřebujete
+                            lokální hotovost</strong>. Narazíte na hromadu uliček se street-foodem, malé obchůdky u
+                        svatyní a automaty na lístky, kde je hotovost jediný možností. Doporučujeme vždy mít v
+                        peněžence alespoň 10 000 JPY.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Jak je to v Japonsku s dýškem (spropitným)?</summary>
+                    <p>V Japonsku se dýška <strong>nedávají</strong>. Je to považováno za součást ceny a snaha o dýško
+                        může personál spíše uvést do rozpaků nebo být vnímána jako neslušnost. Kvalitní servis je zde
+                        standardem, který nevyžaduje příplatek.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Můžu v Japonsku kouřit na veřejnosti?</summary>
+                    <p>Kouření na ulici je ve většině velkých měst <strong>zakázáno</strong> (mimo vyhrazené zóny
+                        označené jako 'Smoking Area'). Za kouření při chůzi hrozí pokuta. Existují ale vnitřní kuřárny v
+                        budovách, některých restauracích a na nádražích.</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Kolik stojí základní věci v 7-Eleven (konbini)?</summary>
+                    <p>Konbini (7-Eleven, Lawson, FamilyMart) jsou skvělým zdrojem levného a kvalitního jídla 24/7.
+                        <strong>Orientační ceny:</strong><br>
+                        • Onigiri (rýžová koule): 150 JPY<br>
+                        • Sendvič / Sladké pečivo: 250–350 JPY<br>
+                        • Teplé Bento (hlavní jídlo): 500–750 JPY<br>
+                        • Káva / Nápoje: 100–200 JPY
+                    </p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Kde najdu v Japonsku odpadkové koše?</summary>
+                    <p>Veřejné koše na ulici <strong>téměř nenajdete</strong>. Japonci jsou zvyklí si odpadky nosit
+                        domů. Koše jsou obvykle u automatů na pití (pouze na lahve a plechovky) nebo u vchodů do konbini
+                        (předpokládá se, že tam vyhodíte věci tam koupené).</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Potřebuji adaptér do zásuvky?</summary>
+                    <p><strong>Ano</strong>, Japonsko používá typ A/B (dva ploché kolíky, jako v USA). Napětí je 100V.
+                        Většina moderních nabíječek (mobily, notebooky) funguje v rozsahu 100–240V, ale pro fén nebo
+                        rychlovarnou konvici z Evropy byste potřebovali transformátor (což se nevyplatí).</p>
+                </details>
+
+                <details class="faq-item">
+                    <summary>Můžu do onsensu (lázní), když mám tetování?</summary>
+                    <p>Tradičně je tetování v onsenech zakázáno kvůli historické spojitosti s Yakuzou. Některé lázně ale
+                        tetované pouští, pokud je tetování malé a lze jej přelepit náplastí. Stále častěji se objevují i
+                        'tattoo-friendly' onseny, které vám rádi doporučíme.</p>
+                </details>
+
+                <!-- Formulář pro dotaz -->
+                <div class="faq-ask-box glass" id="faq-ask">
+                    <h3><i class="fa-regular fa-message"></i> Máte další otázku?</h3>
+                    <p>Nenašli jste odpověď? Napište nám přímo &mdash; odpovíme do 24 hodin.</p>
+                    <form id="faq-form" class="faq-form">
+                        <div class="faq-form-row">
+                            <div class="form-group">
+                                <label for="faq-name">Vaše jméno</label>
+                                <input type="text" id="faq-name" placeholder="Jan Novák" required
+                                    pattern="^[a-zA-Zá-žÁ-Ž\s.]+$" title="Jméno může obsahovat pouze písmena"
+                                    oninput="this.value = this.value.replace(/[0-9]/g, '')">
+                            </div>
+                            <div class="form-group">
+                                <label for="faq-email">Váš e-mail</label>
+                                <input type="email" id="faq-email" placeholder="jan@email.cz" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="faq-question">Váš dotaz</label>
+                            <textarea id="faq-question" rows="4" placeholder="Na co se chcete zeptat?"
+                                required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="faq-submit" style="width: 100%;">
+                            <i class="fa-solid fa-paper-plane"></i> Odeslat dotaz
+                        </button>
+                        <div id="faq-success" class="faq-success-msg"
+                            style="display:none; margin-top: 1rem; color: #2ecc71; text-align: center; font-weight: 600;">
+                            <i class="fa-solid fa-circle-check"></i> Dotaz odeslán! Ozveme se vám co nejdříve.
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer style="margin-top: 4rem;">
+        <div class="footer-inner">
+            <p>&copy; 2026 Tedův východní svět &mdash; Všechna práva vyhrazena.</p>
+            <div class="footer-social">
+                <a href="https://www.instagram.com/rikejmited/" target="_blank" rel="noopener noreferrer"
+                    aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://www.facebook.com/LeesinWrizz/" target="_blank" rel="noopener noreferrer"
+                    aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+                <a href="mailto:sykoratadeas2001@gmail.com" aria-label="E-mail"><i class="fa-solid fa-envelope"></i></a>
+                <a href="contact.html" aria-label="Kontakt"><i class="fa-solid fa-address-card"></i></a>
+            </div>
+            <a href="cancellation.html" style="font-size:0.8rem; color:var(--text-muted); text-decoration:none; opacity:0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">
+                <i class="fa-solid fa-file-contract"></i> Storno podmínky
+            </a>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+
+    <!-- Booking Modal — 3-step wizard -->
+    <div class="booking-modal" id="bookingModal">
+        <div class="glass modal-content" style="max-width:580px;">
+            <button class="close-modal" onclick="closeBooking()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-bottom:1rem; color:var(--accent-color);">Rezervace zájezdu</h3>
+
+            <!-- Krokovač -->
+            <div class="step-indicator">
+                <div class="step-dot active" id="sdot-1">
+                    <div class="step-dot-circle">1</div>
+                    <div class="step-dot-label">Zájezd</div>
+                </div>
+                <div class="step-line" id="sline-1"></div>
+                <div class="step-dot" id="sdot-2">
+                    <div class="step-dot-circle">2</div>
+                    <div class="step-dot-label">Cestující</div>
+                </div>
+                <div class="step-line" id="sline-2"></div>
+                <div class="step-dot" id="sdot-3">
+                    <div class="step-dot-circle">3</div>
+                    <div class="step-dot-label">Potvrzení</div>
+                </div>
+            </div>
+
+            <form id="booking-form" novalidate>
+                <input type="hidden" id="book-plan">
+                <input type="hidden" id="book-date">
+                <!-- KROK 1: Souhrn zájezdu -->
+                <div class="step-content active" id="step-1">
+                    <div class="booking-summary-box" id="step1-summary">
+                        <div class="booking-summary-row"><span><i class="fa-solid fa-map-location-dot"></i> Zájezd</span><span id="s1-plan">—</span></div>
+                        <div class="booking-summary-row"><span><i class="fa-regular fa-calendar"></i> Termín</span><span id="s1-date">—</span></div>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); text-align:center;"><i class="fa-solid fa-circle-info"></i> Zkontrolujte vybraný termín a pokračujte k vyplnění údajů.</p>
+                    <div class="step-nav">
+                        <div></div>
+                        <button type="button" class="btn-step-next" onclick="wizardNext(1)">Vyplnit údaje <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- KROK 2: Cestující -->
+                <div class="step-content" id="step-2">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="book-name">Vaše Jméno</label>
+                        <input type="text" id="book-name" required placeholder="Jan Novák"
+                            pattern="^[a-zA-Zá-žÁ-Ž\s.]+$" title="Jméno může obsahovat pouze písmena"
+                            oninput="this.value = this.value.replace(/[0-9]/g, '')">
+                    </div>
+                    <div class="form-group">
+                        <label for="book-age">Váš Věk</label>
+                        <input type="number" id="book-age" required placeholder="Věk" min="1" max="120">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="book-email">E-mailová adresa</label>
+                    <input type="email" id="book-email" required placeholder="jan@email.cz"
+                        pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
+                        title="Zadejte platnou e-mailovou adresu (např. jmeno@domena.cz)">
+                </div>
+                <div class="form-group">
+                    <label for="book-phone">Telefonní číslo</label>
+                    <input type="tel" id="book-phone" required placeholder="+420 123 456 789" pattern="^\+?[0-9\s]+$"
+                        title="Zadejte platné telefonní číslo"
+                        oninput="this.value = this.value.replace(/[^0-9+\s]/g, '')">
+                </div>
+                <div class="form-group">
+                    <label for="book-count">Počet cestujících (včetně vás)</label>
+                    <select id="book-count" onchange="updateTravelerFields(this.value)"
+                        style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-main);">
+                        <option value="1">1 osoba (sólo cestovatel)</option>
+                        <option value="2">2 osoby</option>
+                        <option value="3">3 osoby</option>
+                        <option value="4">4 osoby</option>
+                        <option value="5">5 a více (upřesněte v poznámce)</option>
+                    </select>
+                </div>
+
+                <div id="single-traveler-warning"
+                    style="display: none; padding: 10px; background: rgba(243, 156, 18, 0.15); border: 1px solid #f39c12; border-radius: 8px; color: #f39c12; font-size: 0.8rem; margin-top: 5px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> <strong>Pozor:</strong> Při obsazení pokoje pouze
+                    jednou osobou počítejte s vyšším příplatkem za ubytování (single supplement).
+                </div>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Úroveň ubytování</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); font-size: 0.9rem;">
+                            <input type="radio" name="hotel-stars" value="3" checked style="width: auto;"> 3* Standard
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); font-size: 0.9rem;">
+                            <input type="radio" name="hotel-stars" value="4" style="width: auto;"> 4* Premium
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="book-breakfast" style="width: auto;">
+                        <span style="font-size: 0.9rem;">Mám zájem o snídaně v ceně</span>
+                    </label>
+                </div>
+
+                <div id="traveler-details"
+                    style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- ZDE SE BUDOU GENEROVAT POLE PRO DALŠÍ CESTUJÍCÍ -->
+                </div>
+
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="book-message">Poznámka (Nepovinné)</label>
+                    <textarea id="book-message" rows="3" placeholder="Máte nějaké speciální požadavky?"></textarea>
+                </div>
+                    <div class="step-nav">
+                        <button type="button" class="btn-step-back" onclick="wizardBack(2)"><i class="fa-solid fa-arrow-left"></i> Zpět</button>
+                        <button type="button" class="btn-step-next" onclick="wizardNext(2)">Zkontrolovat <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- KROK 3: Potvrzení -->
+                <div class="step-content" id="step-3">
+                    <h4 style="margin-bottom:1rem; color:var(--accent-color);"><i class="fa-solid fa-clipboard-check"></i> Shrnutí rezervace</h4>
+                    <div class="booking-summary-box" id="step3-summary">
+                        <!-- Dynamicky plněno JS -->
+                    </div>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                        <i class="fa-solid fa-shield-halved"></i> Odesláním souhlasíte s <a href="cancellation.html" target="_blank" style="color:var(--accent-color);">podmínkami stornování</a>. Rezervace je závazná.
+                    </p>
+                    <button type="submit" class="btn-step-next" style="width:100%; justify-content:center;">
+                        <i class="fa-solid fa-paper-plane"></i> Závazně Rezervovat
+                    </button>
+                    <div class="step-nav" style="margin-top:0.5rem;">
+                        <button type="button" class="btn-step-back" onclick="wizardBack(3)"><i class="fa-solid fa-arrow-left"></i> Zpět</button>
+                        <div></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Plovoucí compare lišta -->
+    <div class="compare-bar" id="compare-bar">
+        <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+            <span style="font-size:0.85rem; color:#3498db; font-weight:700;"><i class="fa-solid fa-scale-balanced"></i> Srovnání zájezdů:</span>
+            <div class="compare-bar-items" id="compare-bar-items"></div>
+        </div>
+        <div class="compare-bar-actions">
+            <button class="btn-compare-clear" onclick="clearCompare()">Zrušit</button>
+            <button class="btn-compare" onclick="openCompareModal()"><i class="fa-solid fa-table-columns"></i> Porovnat</button>
+        </div>
+    </div>
+
+    <!-- Compare Modal -->
+    <div class="cms-modal" id="compareModal">
+        <div class="cms-modal-content" style="max-width:850px; height:auto; max-height:90vh; overflow-y:auto;">
+            <button class="close-modal" onclick="document.getElementById('compareModal').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
+            <h2 style="margin-bottom:0.5rem;"><i class="fa-solid fa-scale-balanced" style="color:#3498db;"></i> Srovnání zájezdů</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Přehledné porovnání vybraných itinerářů.</p>
+            <div class="compare-table-wrap" id="compare-table-container"></div>
+        </div>
+    </div>
+
+    <style>
+        /* === Price Summary Toggle === */
+        .price-summary-toggle {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(239, 35, 60, 0.12), rgba(239, 35, 60, 0.06));
+            border: 1px solid rgba(239, 35, 60, 0.35);
+            border-radius: 12px;
+            padding: 1rem 1.4rem;
+            cursor: pointer;
+            color: var(--text-main);
+            font-family: inherit;
+            transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
+            margin-bottom: 0;
+        }
+
+        [data-theme="light"] .price-summary-toggle {
+            background: linear-gradient(135deg, rgba(255, 102, 178, 0.12), rgba(255, 102, 178, 0.05));
+            border-color: rgba(255, 102, 178, 0.4);
+        }
+
+        .price-summary-toggle:hover {
+            background: linear-gradient(135deg, rgba(239, 35, 60, 0.2), rgba(239, 35, 60, 0.1));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 35, 60, 0.2);
+        }
+
+        .price-summary-toggle[aria-expanded="true"] {
+            border-radius: 12px 12px 0 0;
+            border-bottom-color: transparent;
+        }
+
+        .price-summary-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.15rem;
+            text-align: left;
+        }
+
+        .price-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .price-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            line-height: 1;
+        }
+
+        .price-summary-right {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .price-chevron {
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .price-summary-toggle[aria-expanded="true"] .price-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Breakdown panel */
+        .price-breakdown {
+            border: 1px solid rgba(239, 35, 60, 0.25);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+            animation: slideDown 0.25s ease;
+            margin-bottom: 1rem;
+        }
+
+        [data-theme="light"] .price-breakdown {
+            border-color: rgba(255, 102, 178, 0.3);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .price-breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 1.4rem;
+            font-size: 0.92rem;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        [data-theme="light"] .price-breakdown-item {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .price-breakdown-item:last-of-type {
+            border-bottom: none;
+        }
+
+        .price-breakdown-item span:first-child {
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .price-breakdown-item span:first-child i {
+            color: var(--accent-color);
+            width: 16px;
+            text-align: center;
+        }
+
+        .price-breakdown-item span:last-child {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .price-breakdown-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.4rem;
+            background: rgba(239, 35, 60, 0.15);
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--accent-color);
+        }
+
+        [data-theme="light"] .price-breakdown-total {
+            background: rgba(255, 102, 178, 0.15);
+        }
+
+        /* FAQ Ask Box Styles */
+        .faq-ask-box {
+            margin-top: 3rem;
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .faq-ask-box h3 {
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .faq-form {
+            margin-top: 1.5rem;
+        }
+
+        .faq-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .faq-form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .faq-form .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .faq-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .faq-form input,
+        .faq-form textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        [data-theme="light"] .faq-form input,
+        [data-theme="light"] .faq-form textarea {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .faq-form input:focus,
+        .faq-form textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* FAQ Section Layout & Aesthetic Improvements */
+        .faq-section {
+            max-width: 800px;
+            margin: 4rem 0 4rem 2rem;
+            /* Zarovnáno doleva s mírným odstupem */
+            padding: 0 1.5rem;
+            text-align: left;
+        }
+
+        .faq-section h2 {
+            margin-bottom: 2.5rem;
+            font-size: 2.2rem;
+            font-weight: 800;
+            text-align: left;
+        }
+
+        .faq-item {
+            text-align: left;
+            margin-bottom: 1.2rem;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+            background: rgba(15, 15, 15, 0.6);
+            /* Tmavší a méně průhledné v dark modu */
+            backdrop-filter: blur(12px);
+            /* Silnější rozmazání pozadí */
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        [data-theme="light"] .faq-item {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        .faq-item:hover {
+            transform: translateX(5px);
+            border-color: var(--accent-color);
+            background: rgba(15, 15, 15, 0.75);
+        }
+
+        [data-theme="light"] .faq-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .faq-item summary {
+            padding: 1.2rem 1.5rem;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none;
+            /* Hide default arrow */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            /* Jemný stín pro lepší čitelnost */
+        }
+
+        [data-theme="light"] .faq-item summary {
+            text-shadow: none;
+        }
+
+        .faq-item summary::-webkit-details-marker {
+            display: none;
+            /* Hide default arrow Chrome */
+        }
+
+        .faq-item summary::after {
+            content: '+';
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item[open] summary::after {
+            transform: rotate(45deg);
+        }
+
+        .faq-item p {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            line-height: 1.6;
+            color: #eee;
+            /* Světlejší text v dark modu */
+            font-size: 1rem;
+            animation: fadeIn 0.4s ease;
+        }
+
+        [data-theme="light"] .faq-item p {
+            color: #444;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .faq-ask-box {
+            text-align: left;
+            margin-top: 3rem;
+            padding: 2.5rem;
+            border-radius: 20px;
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+        }
+
+        [data-theme="light"] .faq-ask-box {
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .capacity-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            background: rgba(239, 35, 60, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        [data-theme="light"] .capacity-info {
+            background: rgba(255, 102, 178, 0.1);
+            color: #ff66b2;
+        }
+    </style>
+
+    <script>
+        function togglePriceBreakdown(btn) {
+            const expanded = btn.getAttribute('aria-expanded') === 'true';
+            const breakdown = btn.nextElementSibling;
+            btn.setAttribute('aria-expanded', !expanded);
+            const hint = btn.querySelector('.price-hint');
+            if (expanded) {
+                breakdown.hidden = true;
+                hint.textContent = hint.textContent.includes('odhad') ? 'Zobrazit odhad' : 'Zobrazit výpis';
+            } else {
+                breakdown.hidden = false;
+                hint.textContent = hint.textContent.includes('odhad') ? 'Skrýt odhad' : 'Skrýt výpis';
+            }
+        }
+
+        window.toggleGuide = function (id) {
+            const guide = document.getElementById('guide-' + id);
+            const btn = guide.previousElementSibling;
+            const arrow = btn.querySelector('.guide-arrow');
+
+            if (guide.style.display === 'none') {
+                guide.style.display = 'block';
+                arrow.style.transform = 'rotate(180deg)';
+                btn.style.borderColor = 'var(--accent-color)';
+            } else {
+                guide.style.display = 'none';
+                arrow.style.transform = 'rotate(0)';
+                btn.style.borderColor = 'var(--glass-border)';
+            }
+        }
+
+        // FAQ Form Handling
+        document.addEventListener('DOMContentLoaded', () => {
+            const faqForm = document.getElementById('faq-form');
+            if (faqForm) {
+                faqForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const submitBtn = document.getElementById('faq-submit');
+                    const successMsg = document.getElementById('faq-success');
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Odesílám...';
+
+                    // Simulace odeslání
+                    setTimeout(() => {
+                        faqForm.reset();
+                        submitBtn.style.display = 'none';
+                        successMsg.style.display = 'block';
+                    }, 1500);
+                });
+            }
+        });
+
+        // Dynamic Traveler Fields
+        window.updateTravelerFields = function (count) {
+            const container = document.getElementById('traveler-details');
+            const warning = document.getElementById('single-traveler-warning');
+            container.innerHTML = "";
+            const num = parseInt(count);
+
+            // Toggle warning for single travelers
+            if (num === 1) warning.style.display = "block";
+            else warning.style.display = "none";
+
+            // Generate fields for other travelers (if count > 1)
+            // The first traveler is the person filling the form (Main contact)
+            if (num > 1) {
+                const title = document.createElement('h4');
+                title.style.fontSize = "0.9rem";
+                title.style.color = "var(--text-muted)";
+                title.textContent = "Údaje o dalších cestujících:";
+                container.appendChild(title);
+
+                for (let i = 1; i < num; i++) {
+                    const group = document.createElement('div');
+                    group.className = "traveler-entry";
+                    group.style.cssText = "display: grid; grid-template-columns: 2fr 1fr; gap: 10px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 8px;";
+
+                    group.innerHTML = `
+                        <div>
+                            <label style="font-size: 0.8rem;">Jméno ${i + 1}. osoby</label>
+                            <input type="text" class="traveler-name" placeholder="Celé jméno" required 
+                                pattern="^[a-zA-Zá-žÁ-Ž\\s.]+$" title="Jméno může obsahovat pouze písmena"
+                                oninput="this.value = this.value.replace(/[0-9]/g, '')"
+                                style="width: 100%; padding: 0.5rem; border-radius: 5px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-main);">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem;">Věk</label>
+                            <input type="number" class="traveler-age" placeholder="Věk" required min="1" max="120"
+                                style="width: 100%; padding: 0.5rem; border-radius: 5px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-main);">
+                        </div>
+                    `;
+                    container.appendChild(group);
+                }
+            }
+        };
+    </script>
+
+    <script type="module">
+        import { db, isConfigured, collection, addDoc, serverTimestamp, getDocs, query } from './firebase-config.js';
+
+        let itineraries = [];
+        let filteredItineraries = [];
+        let tripsData = {};
+        let reviewsData = [];
+        let currentFilter = 'vše';
+        let currentSort = 'default';
+
+        // --- DYNAMICKÉ NAČÍTÁNÍ ITINERÁŘŮ ---
+        async function loadItineraries() {
+            const container = document.getElementById('itineraries-row');
+            itineraries = [];
+            tripsData = {};
+
+            // 1. Načtení dat (Firebase nebo LocalStorage)
+            if (isConfigured) {
+                try {
+                    const itinSnap = await getDocs(collection(db, "itineraries"));
+                    itinSnap.forEach(doc => itineraries.push({ id: doc.id, ...doc.data() }));
+
+                    const tripsSnap = await getDocs(collection(db, "trips"));
+                    tripsSnap.forEach(doc => tripsData[doc.id] = doc.data());
+
+                    const revSnap = await getDocs(collection(db, "reviews"));
+                    revSnap.forEach(doc => reviewsData.push({ id: doc.id, ...doc.data() }));
+                } catch (e) { console.error("Chyba při načítání dat:", e); }
+            } else {
+                const localItin = JSON.parse(localStorage.getItem('test_itineraries') || '{}');
+                Object.keys(localItin).forEach(id => itineraries.push({ id, ...localItin[id] }));
+
+                const localTrips = JSON.parse(localStorage.getItem('test_trips') || '{}');
+                Object.assign(tripsData, localTrips);
+
+                reviewsData = JSON.parse(localStorage.getItem('test_reviews') || '[]');
+            }
+
+            // 2. Vykreslení itinerářů
+            updateView();
+        }
+
+        window.applyFilter = function (tag) {
+            currentFilter = tag;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.toLowerCase() === tag);
+            });
+            updateView();
+        }
+
+        window.applySort = function (sort) {
+            currentSort = sort;
+            updateView();
+        }
+
+        function updateView() {
+            const container = document.getElementById('itineraries-row');
+
+            // Filtrování
+            filteredItineraries = currentFilter === 'vše'
+                ? [...itineraries]
+                : itineraries.filter(i => (i.tags || []).includes(currentFilter));
+
+            // Řazení
+            if (currentSort === 'price-asc') {
+                filteredItineraries.sort((a, b) => (a.priceNumeric || 0) - (b.priceNumeric || 0));
+            } else if (currentSort === 'price-desc') {
+                filteredItineraries.sort((a, b) => (b.priceNumeric || 0) - (a.priceNumeric || 0));
+            }
+
+            container.innerHTML = filteredItineraries.map(itin => renderItineraryCard(itin, tripsData)).join("");
+        }
+
+        // 3. Re-inicializace funkcí (carousels, price summary)
+        // U dynamického obsahu stačí, že funkce moveCarousel a togglePriceBreakdown jsou globální.
+
+        function renderItineraryCard(itin, tripsData) {
+            const _t = (key, fb) => window.i18n && window.i18n.t ? window.i18n.t(key, fb) : fb;
+            const daysHtml = (itin.days || []).map(day => `
+                <div class="day-row">
+                    <div class="day-num">${day.num}</div>
+                    <div class="day-content">
+                        <div class="day-desc">${day.desc}</div>
+                        <ul class="day-details">
+                            ${(day.details || []).map(li => `<li>${li}</li>`).join("")}
+                        </ul>
+                    </div>
+                </div>
+            `).join("");
+
+            const budgetsHtml = (itin.costs || []).map(c => `
+                <div class="price-breakdown-item">
+                    <span><i class="${c.icon || 'fa-solid fa-circle'}"></i> ${c.label} ${c.note ? `<small style="color:var(--text-muted);font-weight:400">(${c.note})</small>` : ''}</span>
+                    <span>${c.price}</span>
+                </div>
+            `).join("");
+
+            // Filtrování termínů pro tento konkrétní itinerář
+            const relevantTrips = Object.values(tripsData).filter(t => t.plan === itin.title || t.plan === itin.id);
+            const datesHtml = relevantTrips.map(trip => {
+                const tripId = btoa(trip.plan + trip.dateRange).replace(/[/+=]/g, "");
+                const remaining = (trip.total || 12) - (trip.booked || 0);
+                const isFull = remaining <= 0;
+
+                let marketingTag = "";
+                if (remaining <= 2 && remaining > 0) {
+                    marketingTag = `<span class="marketing-tag">Poslední ${remaining} ${remaining === 1 ? 'místo' : 'místa'}!</span>`;
+                }
+
+                return `
+                <div class="date-pill" style="${isFull ? 'opacity: 0.7;' : ''}">
+                    ${marketingTag}
+                    <div class="date-info"><i class="fa-regular fa-calendar"></i> ${trip.dateRange}</div>
+                    <span class="capacity-info" style="${remaining <= 3 ? 'color: #f39c12;' : ''} ${isFull ? 'color: #e74c3c;' : ''}">
+                        <i class="fa-solid fa-users"></i> ${isFull ? 'Obsazeno' : `${remaining}/${trip.total || 12}`}
+                    </span>
+                    <button class="btn btn-primary" ${isFull ? 'disabled' : ''} 
+                        onclick="openBooking('${itin.title}', '${trip.dateRange}')">
+                        ${isFull ? 'Obsazeno' : _t('planner.card.reserve', 'Rezervovat')}
+                    </button>
+                </div>`;
+            }).join("") || `<p style='font-size:0.8rem; color:var(--text-muted)'>${_t('planner.card.noDates', 'Zatím nejsou vypsány žádné termíny.')}</p>`;
+
+            const tagsHtml = (itin.tags || []).map(t => `<span class="trip-tag">${t}</span>`).join("");
+
+            return `
+            <div class="glass itinerary-card" id="${itin.id}">
+                <div class="itinerary-header">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3><i class="${itin.icon || 'fa-solid fa-map-location-dot'}"></i> ${itin.title}</h3>
+                            <div class="trip-tags">${tagsHtml}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                            ${itin.difficultyTxt ? `<div class="diff-badge"><i class="fa-solid fa-shoe-prints"></i> ${_t('planner.card.difficulty', 'Obtížnost')}: <strong>${itin.difficultyTxt}</strong></div>` : ''}
+                            <button class="wishlist-btn ${isWishlisted(itin.id) ? 'wishlisted' : ''}" onclick="toggleWishlist('${itin.id}', this)" title="${isWishlisted(itin.id) ? _t('planner.card.removeWishlist', 'Odebrat z oblíbených') : _t('planner.card.addWishlist', 'Přidat do oblíbených')}">
+                                <i class="fa-${isWishlisted(itin.id) ? 'solid' : 'regular'} fa-heart"></i>
+                            </button>
+                            <label class="compare-check-label" title="${_t('planner.card.compare', 'Srovnat')}">
+                                <input type="checkbox" class="compare-check" data-id="${itin.id}" data-title="${itin.title}" onchange="toggleCompare('${itin.id}', '${itin.title}', this.checked)">
+                                ${_t('planner.card.compare', 'Srovnat')}
+                            </label>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1rem;">${itin.description}</p>
+                </div>
+                <div class="itinerary-content left">
+                    <div class="itinerary-days">${daysHtml}</div>
+                    <div class="dates-container">
+                        <h4>${_t('planner.card.availableDates', 'Dostupné termíny:')}</h4>
+                        ${datesHtml}
+                    </div>
+                    
+                    ${reviewsData.filter(r => r.plan === itin.title).slice(0, 3).length > 0 ? `
+                        <div class="itin-reviews" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border);">
+                            <h4 style="margin-bottom: 1rem;"><i class="fa-regular fa-comments"></i> ${_t('planner.card.reviewsTitle', 'Co o programu říkají ostatní')}</h4>
+                            <div style="display:flex; flex-direction: column; gap: 10px;">
+                                ${reviewsData.filter(r => r.plan === itin.title).slice(0, 3).map(r => `
+                                    <div class="glass" style="padding: 15px; border-radius: 8px; border-left: 3px solid #f1c40f;">
+                                        <div style="display:flex; gap: 10px; align-items:center;">
+                                            <div style="font-size: 1.5rem; color: var(--text-muted); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                                <i class="fa-solid fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <strong style="display:block; font-size: 0.9rem;">${r.name}</strong>
+                                                <span style="color: #f1c40f; font-size:0.8rem;">${'★'.repeat(r.stars || r.rating || 5)}${'☆'.repeat(5 - (r.stars || r.rating || 5))}</span>
+                                            </div>
+                                        </div>
+                                        <p style="margin-top: 10px; font-size: 0.85rem; font-style: italic; color: var(--text-muted);">"${r.text}"</p>
+                                    </div>
+                                `).join("")}
+                            </div>
+                        </div>
+                    ` : ""}
+                </div>
+                <div class="itinerary-content right">
+                    <!-- Carousel (Dynamické fotky z DB nebo placeholderu) -->
+                    <div class="carousel" id="carousel-${itin.id}">
+                        <div class="carousel-inner">
+                            ${(itin.images && itin.images.length > 0)
+                    ? itin.images.map((img, idx) => `<img src="${img}" class="${idx === 0 ? 'active' : ''}" alt="${itin.title}">`).join("")
+                    : `
+                                    <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=600" class="active" alt="Kyoto">
+                                    <img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=600" alt="Tokyo">
+                                    <img src="https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?q=80&w=600" alt="Fuji">
+                                `
+                }
+                        </div>
+                        <button class="carousel-control prev" onclick="moveCarousel('carousel-${itin.id}', -1)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="carousel-control next" onclick="moveCarousel('carousel-${itin.id}', 1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="cost-table-wrapper">
+                        <h3><i class="fa-solid fa-wallet"></i> Orientační rozpočet</h3>
+                        <button class="price-summary-toggle" onclick="togglePriceBreakdown(this)" aria-expanded="false">
+                            <div class="price-summary-left">
+                                <span class="price-label">Celková cena</span>
+                                <span class="price-value">${itin.price || 'Na vyžádání'}</span>
+                            </div>
+                            <div class="price-summary-right">
+                                <span class="price-hint">Zobrazit výpis</span>
+                                <i class="fa-solid fa-chevron-down price-chevron"></i>
+                            </div>
+                        </button>
+                        <div class="price-breakdown" hidden>
+                            ${budgetsHtml}
+                            <div class="price-breakdown-total">
+                                <span>Odhad celkem</span>
+                                <span>${itin.price}</span>
+                            </div>
+                        </div>
+                        <div class="cost-included-excluded">
+                            <div class="cost-inc-list">
+                                <h4>V ceně zájezdu</h4>
+                                <ul>
+                                    <li><i class="fa-solid fa-plane-up"></i> Zpáteční letenka + poplatky</li>
+                                    <li><i class="fa-solid fa-bed"></i> Ubytování (hotely 3-4*)</li>
+                                    <li><i class="fa-solid fa-train"></i> Doprava (vlaky, metro)</li>
+                                    <li><i class="fa-solid fa-user-tie"></i> Český průvodce</li>
+                                    <li><i class="fa-solid fa-ticket"></i> Základní vstupy</li>
+                                </ul>
+                            </div>
+                            <div class="cost-exc-list">
+                                <h4>Není v ceně</h4>
+                                <ul>
+                                    <li><i class="fa-solid fa-utensils"></i> Strava a kapesné</li>
+                                    <li><i class="fa-solid fa-shield-halved"></i> Pojištění</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        ${itin.guide ? `
+                            <button class="guide-toggle" onclick="toggleGuide('${itin.id}')">
+                                <i class="fa-solid fa-circle-info"></i> Průvodce a tipy na cestu <i class="fa-solid fa-chevron-down guide-arrow"></i>
+                            </button>
+                            <div class="itinerary-guide" id="guide-${itin.id}" style="display: none;">
+                                <h4 style="color: var(--accent-color); margin-bottom: 0.5rem;"><i class="fa-solid fa-suitcase-rolling"></i> Co si vzít s sebou?</h4>
+                                <p style="white-space: pre-wrap; margin-bottom: 1rem; color: var(--text-main); line-height: 1.5;">${itin.guide}</p>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--glass-border); padding-top: 0.5rem;">
+                                    <i class="fa-solid fa-circle-exclamation"></i> Podrobnější instrukce k balení a penězům obdržíte v mailu po rezervaci.
+                                </p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadItineraries();
+        });
+
+        // ============ WIZARD LOGIKA ============
+        let currentStep = 1;
+
+        window.openBooking = function (planName, planDate) {
+            document.getElementById('book-plan').value = planName;
+            document.getElementById('book-date').value = planDate;
+            document.getElementById('s1-plan').textContent = planName;
+            document.getElementById('s1-date').textContent = planDate;
+            goToStep(1);
+            document.getElementById('bookingModal').classList.add('active');
+            document.body.classList.add('modal-open');
+        };
+
+        function goToStep(step) {
+            currentStep = step;
+            [1,2,3].forEach(s => {
+                document.getElementById('step-' + s).classList.toggle('active', s === step);
+                const dot = document.getElementById('sdot-' + s);
+                dot.classList.remove('active', 'done');
+                if (s === step) dot.classList.add('active');
+                else if (s < step) dot.classList.add('done');
+            });
+            [1,2].forEach(s => {
+                const line = document.getElementById('sline-' + s);
+                if (line) line.classList.toggle('done', s < step);
+            });
+        }
+
+        window.wizardNext = function(fromStep) {
+            if (fromStep === 2) {
+                // Validace kroku 2
+                const required = ['book-name','book-age','book-email','book-phone'];
+                let valid = true;
+                required.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el.value.trim()) { el.style.borderColor = '#e74c3c'; valid = false; }
+                    else el.style.borderColor = '';
+                });
+                if (!valid) { return; }
+                // Naplnit shrnutí
+                const stars = document.querySelector('input[name="hotel-stars"]:checked')?.value || '3';
+                const breakfast = document.getElementById('book-breakfast').checked;
+                const count = document.getElementById('book-count').value;
+                document.getElementById('step3-summary').innerHTML = `
+                    <div class="booking-summary-row"><span><i class="fa-solid fa-map-location-dot"></i> Zájezd</span><span>${document.getElementById('book-plan').value}</span></div>
+                    <div class="booking-summary-row"><span><i class="fa-regular fa-calendar"></i> Termín</span><span>${document.getElementById('book-date').value}</span></div>
+                    <div class="booking-summary-row"><span><i class="fa-solid fa-user"></i> Jméno</span><span>${document.getElementById('book-name').value}</span></div>
+                    <div class="booking-summary-row"><span><i class="fa-solid fa-envelope"></i> E-mail</span><span>${document.getElementById('book-email').value}</span></div>
+                    <div class="booking-summary-row"><span><i class="fa-solid fa-phone"></i> Telefon</span><span>${document.getElementById('book-phone').value}</span></div>
+                    <div class="booking-summary-row"><span><i class="fa-solid fa-users"></i> Cestující</span><span>${count} ${count == 1 ? 'osoba' : 'osoby/osob'}</span></div>
+                    <div class="booking-summary-row"><span><i class="fa-solid fa-bed"></i> Ubytování</span><span>${stars}* ${stars == 4 ? 'Premium' : 'Standard'}</span></div>
+                    <div class="booking-summary-row"><span><i class="fa-solid fa-mug-hot"></i> Snídaně</span><span>${breakfast ? '✅ Ano' : '❌ Ne'}</span></div>
+                `;
+            }
+            goToStep(fromStep + 1);
+        };
+
+        window.wizardBack = function(fromStep) {
+            goToStep(fromStep - 1);
+        };
+
+        // ============ WISHLIST LOGIKA ============
+        function getWishlist() {
+            return JSON.parse(localStorage.getItem('wishlist') || '[]');
+        }
+
+        window.isWishlisted = function(id) {
+            return getWishlist().includes(id);
+        };
+
+        window.toggleWishlist = function(id, btn) {
+            let wl = getWishlist();
+            if (wl.includes(id)) {
+                wl = wl.filter(x => x !== id);
+                btn.classList.remove('wishlisted');
+                btn.querySelector('i').className = 'fa-regular fa-heart';
+                btn.title = 'Přidat do oblíbených';
+            } else {
+                wl.push(id);
+                btn.classList.add('wishlisted');
+                btn.querySelector('i').className = 'fa-solid fa-heart';
+                btn.title = 'Odebrat z oblíbených';
+            }
+            localStorage.setItem('wishlist', JSON.stringify(wl));
+        };
+
+        // Rozšíření filtru o "oblíbené"
+        const _origApplyFilter = window.applyFilter;
+        window.applyFilter = function(tag) {
+            currentFilter = tag;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const match = tag === 'vše'
+                    ? btn.innerText.trim().toLowerCase().includes('vše')
+                    : btn.innerText.trim().toLowerCase().includes(tag.toLowerCase());
+                btn.classList.toggle('active', match);
+            });
+            if (tag === 'oblíbené') {
+                const wl = getWishlist();
+                filteredItineraries = itineraries.filter(i => wl.includes(i.id));
+                const container = document.getElementById('itineraries-row');
+                if (filteredItineraries.length === 0) {
+                    container.innerHTML = '<div class="glass" style="padding:3rem; text-align:center; color:var(--text-muted);"><i class="fa-regular fa-heart" style="font-size:3rem; display:block; margin-bottom:1rem;"></i><p>Zatím nemáte žádné oblíbené zájezdy.<br>Klikněte na ❤️ u zájezdu pro přidání.</p></div>';
+                } else {
+                    container.innerHTML = filteredItineraries.map(i => renderItineraryCard(i, tripsData)).join('');
+                }
+            } else {
+                updateView();
+            }
+        };
+
+        // ============ COMPARE LOGIKA ============
+        let compareList = [];
+
+        window.toggleCompare = function(id, title, checked) {
+            if (checked) {
+                if (compareList.length >= 3) {
+                    alert('Lze porovnat nejvýše 3 zájezdy najednou.');
+                    document.querySelector(`.compare-check[data-id="${id}"]`).checked = false;
+                    return;
+                }
+                compareList.push({ id, title });
+            } else {
+                compareList = compareList.filter(x => x.id !== id);
+            }
+            renderCompareBar();
+        };
+
+        function renderCompareBar() {
+            const bar = document.getElementById('compare-bar');
+            const items = document.getElementById('compare-bar-items');
+            items.innerHTML = compareList.map(x => `
+                <div class="compare-bar-chip">
+                    ${x.title}
+                    <button onclick="removeFromCompare('${x.id}')" title="Odebrat">×</button>
+                </div>`).join('');
+            bar.classList.toggle('visible', compareList.length >= 2);
+        }
+
+        window.removeFromCompare = function(id) {
+            compareList = compareList.filter(x => x.id !== id);
+            const cb = document.querySelector(`.compare-check[data-id="${id}"]`);
+            if (cb) cb.checked = false;
+            renderCompareBar();
+        };
+
+        window.clearCompare = function() {
+            compareList = [];
+            document.querySelectorAll('.compare-check').forEach(cb => cb.checked = false);
+            renderCompareBar();
+        };
+
+        window.openCompareModal = function() {
+            const items = compareList.map(x => itineraries.find(i => i.id === x.id)).filter(Boolean);
+            if (items.length < 2) return;
+
+            const rows = [
+                { label: 'Cena', fn: i => i.price || '—' },
+                { label: 'Délka', fn: i => i.duration || (i.days?.length ? i.days.length + ' dní' : '—') },
+                { label: 'Typ', fn: i => (i.tags || []).join(', ') || '—' },
+                { label: 'Obtížnost', fn: i => i.difficultyTxt || '—' },
+                { label: 'Letenka', fn: () => '<i class="fa-solid fa-check compare-check-icon"></i>' },
+                { label: 'Ubytování', fn: () => '<i class="fa-solid fa-check compare-check-icon"></i>' },
+                { label: 'Průvodce', fn: () => '<i class="fa-solid fa-check compare-check-icon"></i>' },
+                { label: 'Snídaně', fn: i => i.breakfast ? '<i class="fa-solid fa-check compare-check-icon"></i>' : '<i class="fa-solid fa-xmark compare-x-icon"></i>' },
+                { label: 'Stripe platba', fn: i => i.stripeLink ? '<i class="fa-solid fa-check compare-check-icon"></i>' : '<i class="fa-solid fa-xmark compare-x-icon"></i>' },
+            ];
+
+            const header = `<tr><th>Vlastnost</th>${items.map(i => `<th>${i.title}</th>`).join('')}</tr>`;
+            const body = rows.map(r =>
+                `<tr><td>${r.label}</td>${items.map(i => `<td>${r.fn(i)}</td>`).join('')}</tr>`
+            ).join('');
+
+            document.getElementById('compare-table-container').innerHTML =
+                `<table class="compare-table"><thead>${header}</thead><tbody>${body}</tbody></table>`;
+            document.getElementById('compareModal').classList.add('active');
+        };
+
+        window.closeBooking = function () {
+            document.getElementById('bookingModal').classList.remove('active');
+            document.body.classList.remove('modal-open');
+            document.getElementById('booking-form').reset();
+            goToStep(1); // Reset wizard zpět na krok 1
+        };
+
+        document.getElementById('booking-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Odesílám...";
+            btn.disabled = true;
+
+            const travelers = [
+                {
+                    name: document.getElementById('book-name').value,
+                    age: document.getElementById('book-age').value
+                }
+            ];
+            const travelerNames = document.querySelectorAll('.traveler-name');
+            const travelerAges = document.querySelectorAll('.traveler-age');
+            for (let i = 0; i < travelerNames.length; i++) {
+                travelers.push({ name: travelerNames[i].value, age: travelerAges[i].value });
+            }
+
+            const hotelStars = document.querySelector('input[name="hotel-stars"]:checked').value;
+            const breakfast = document.getElementById('book-breakfast').checked;
+
+            const formData = {
+                name: document.getElementById('book-name').value,
+                email: document.getElementById('book-email').value,
+                phone: document.getElementById('book-phone').value,
+                travelerCount: document.getElementById('book-count').value,
+                travelers: travelers,
+                hotelStars: hotelStars,
+                breakfast: breakfast,
+                interest: document.getElementById('book-plan').value,
+                dateObj: document.getElementById('book-date').value,
+                message: document.getElementById('book-message').value,
+                date: new Date().toISOString()
+            };
+
+            try {
+                // Sestavení podrobné zprávy pro e-mail
+                const travelersText = travelers.map((t, idx) => `${idx + 1}. ${t.name} (${t.age} let)`).join('\n');
+                const emailBody = `
+========= NOVÁ REZERVACE =========
+
+KLIENT: ${formData.name}
+E-mail: ${formData.email}
+Telefon: ${formData.phone}
+
+ZÁJEZD: ${formData.interest}
+TERMÍN: ${formData.dateObj}
+
+--- KONFIGURACE ---
+Kategorie hotelu: ${hotelStars}* Standard/Premium
+Snídaně: ${breakfast ? 'ANO' : 'NE'}
+Počet osob: ${formData.travelerCount}
+${parseInt(formData.travelerCount) === 1 ? '(!) POZOR: Sólo cestovatel (single supplement)\n' : ''}
+
+--- SEZNAM CESTUJÍCÍCH ---
+${travelersText}
+
+--- POZNÁMKA ---
+${formData.message || 'Bez poznámky'}
+                `;
+
+                fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        access_key: "6705e9e6-2ced-4d72-9b02-95f2a0e1a1fc",
+                        subject: `Rezervace (${formData.travelerCount} os.): ${formData.interest}`,
+                        from_name: formData.name,
+                        replyto: formData.email,
+                        message: emailBody
+                    })
+                }).catch(err => console.log("Email info warning:", err));
+
+                const now = new Date();
+                const vs = `${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}${Math.floor(1000 + Math.random() * 9000)}`;
+
+                const orderFullData = {
+                    ...formData,
+                    orderId: vs,
+                    createdAt: isConfigured ? serverTimestamp() : new Date().toISOString()
+                };
+
+                if (isConfigured) {
+                    await addDoc(collection(db, "orders"), orderFullData);
+                } else {
+                    let orders = JSON.parse(localStorage.getItem('test_orders') || '[]');
+                    orders.push(orderFullData);
+                    localStorage.setItem('test_orders', JSON.stringify(orders));
+                }
+
+                // Najdeme itinerář pro Stripe a cenu
+                const itin = itineraries.find(i => i.title === formData.interest);
+                showPaymentModal(vs, itin, formData.name);
+
+                closeBooking();
+            } catch (err) {
+                console.error("Chyba při odesílání: ", err);
+                alert("Něco se pokazilo, zkuste to prosím znovu za chvíli.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+        window.showPaymentModal = function (vs, itin, name) {
+            document.getElementById('payment-vs').innerText = vs;
+            const modal = document.getElementById('paymentModal');
+
+            // Vyčistit a vygenerovat QR kód
+            const qrWrap = document.getElementById('qr-wrap');
+            // Očistíme cenu od teček/Kč pro API
+            const amount = itin?.price?.replace(/\D/g, "") || "0";
+            const qrUrl = `https://api.paylibo.com/paylibo/generator/czech/image?accountNumber=258553075&bankCode=0300&amount=${amount}&currency=CZK&vs=${vs}&message=Teduv-vychodni-svet-${name.replace(/\s/g, "-")}&size=150`;
+
+            qrWrap.innerHTML = `<img src="${qrUrl}" alt="QR Platba" style="width:100%; height:100%;">`;
+
+            // Stripe link
+            const stripeOpt = document.getElementById('stripe-opt');
+            const stripeLink = document.getElementById('stripe-link');
+            if (itin?.stripeLink) {
+                stripeOpt.style.display = "flex";
+                stripeLink.href = itin.stripeLink;
+            } else {
+                stripeOpt.style.display = "none";
+            }
+
+            modal.classList.add('active');
+            document.body.classList.add('modal-open');
+        };
+
+        window.closePaymentModal = function () {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.body.classList.remove('modal-open');
+        };
+    </script>
+
+    <!-- Payment Modal (Checkout Selection) -->
+    <div class="payment-modal" id="paymentModal">
+        <div class="payment-card glass">
+            <div class="payment-success-icon"><i class="fa-solid fa-check"></i></div>
+            <h2 style="color: #00b894; margin-bottom: 0.5rem;">Rezervace přijata!</h2>
+            <p style="margin-bottom: 1.5rem; opacity: 0.9;">Vaše objednávka byla úspěšně odeslána. <br> Pro potvrzení
+                rezervace prosím proveďte platbu zálohy.</p>
+
+            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 15px; margin-bottom: 2rem;">
+                <p style="font-size: 0.8rem; margin-bottom: 5px; opacity: 0.7;">Váš variabilní symbol pro platbu:</p>
+                <div class="vs-tag" id="payment-vs">---</div>
+            </div>
+
+            <div class="payment-options">
+                <!-- QR Platba -->
+                <div class="pay-opt">
+                    <h3><i class="fa-solid fa-building-columns"></i> Převodem</h3>
+                    <p style="font-size: 0.8rem;">Skenujte v bankovní aplikaci</p>
+                    <div class="qr-placeholder" id="qr-wrap">
+                        <p style="font-size: 0.7rem; color:#555;">Generuji QR kód...</p>
+                    </div>
+                </div>
+
+                <!-- Stripe -->
+                <div class="pay-opt" id="stripe-opt" style="display: none;">
+                    <h3><i class="fa-solid fa-credit-card"></i> Kartou</h3>
+                    <p style="font-size: 0.8rem;">Rychlá platba přes Stripe</p>
+                    <a href="#" id="stripe-link" target="_blank" class="stripe-btn"
+                        style="text-decoration: none; text-align: center;">Zaplatit kartou</a>
+                </div>
+            </div>
+
+            <button class="btn"
+                style="margin-top: 2rem; background: rgba(255,255,255,0.1); color: var(--text-main); font-size: 0.8rem;"
+                onclick="closePaymentModal()">Zavřít a zaplatit později</button>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script type="module" src="global-auth.js"></script>
+</body>
+
+</html>
+

@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Kdokoliv může číst/stahovat veřejné fotky zájezdů
+      allow read: if true;
+      // Nahrávat obrázky nebo PDF přes administraci může pouze administrátor
+      allow write: if request.auth != null && request.auth.token.email == 'sykoratadeas2001@gmail.com';
+    }
+  }
+}
