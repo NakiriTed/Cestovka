@@ -3,12 +3,12 @@ import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, s
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDxJ3Ew2mLKs15nVFdQUV9PQZw_qL2avTY",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "cestovka-55f10.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "cestovka-55f10",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "cestovka-55f10.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "660762572264",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:660762572264:web:671edd553bc734d82ce05d"
 };
 
 const app = initializeApp(firebaseConfig);
