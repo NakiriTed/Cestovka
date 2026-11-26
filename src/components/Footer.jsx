@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 export function Footer() {
-  const { t } = useLanguage();
+  const { t, currentLang } = useLanguage();
 
   return (
     <footer style={{ marginTop: '4rem' }}>
@@ -22,12 +22,12 @@ export function Footer() {
           <a href="mailto:sykoratadeas2001@gmail.com" aria-label="E-mail">
             <i className="fa-solid fa-envelope"></i>
           </a>
-          <Link to="/contact" aria-label="Kontakt">
+          <Link to="/contact" aria-label={currentLang === 'en' ? 'Contact' : 'Kontakt'}>
             <i className="fa-solid fa-address-card"></i>
           </Link>
         </div>
         <Link to="/cancellation" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textDecoration: 'none', opacity: 0.7, transition: 'opacity 0.2s' }}>
-          <i className="fa-solid fa-file-contract"></i> Storno podmínky
+          <i className="fa-solid fa-file-contract"></i> {currentLang === 'en' ? 'Cancellation Policy' : 'Storno podmínky'}
         </Link>
       </div>
     </footer>

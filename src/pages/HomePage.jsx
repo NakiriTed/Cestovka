@@ -55,7 +55,7 @@ export function HomePage() {
                 <path id="curve" d="M 30,105 A 240,110 0 0,1 470,105" fill="none" />
                 <text style={{ fontSize: '46px', fontWeight: 900, fill: 'var(--accent-color)', letterSpacing: '6px', fontFamily: "'Dela Gothic One', sans-serif", filter: 'drop-shadow(0 4px 15px rgba(239,35,60,0.4))' }}>
                   <textPath href="#curve" startOffset="50%" textAnchor="middle">
-                    TEDOVA ASIE
+                    {isEn ? "TED'S ASIA" : 'TEDOVA ASIE'}
                   </textPath>
                 </text>
               </svg>

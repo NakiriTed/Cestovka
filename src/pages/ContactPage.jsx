@@ -126,11 +126,11 @@ export function ContactPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
               <div className="form-group">
                 <label htmlFor="contact-name">{isEn ? 'Full Name' : 'Jméno a příjmení'}</label>
-                <input id="contact-name" autoComplete="name" type="text" required placeholder="Jan Novák" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                <input id="contact-name" autoComplete="name" type="text" required placeholder={isEn ? 'John Smith' : 'Jan Novák'} value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
               </div>
               <div className="form-group">
                 <label htmlFor="contact-email">{isEn ? 'E-mail' : 'E-mail'}</label>
-                <input id="contact-email" autoComplete="email" type="email" required placeholder="jan@email.cz" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                <input id="contact-email" autoComplete="email" type="email" required placeholder={isEn ? 'john@email.com' : 'jan@email.cz'} value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
               </div>
             </div>
 

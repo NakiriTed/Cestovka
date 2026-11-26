@@ -319,8 +319,8 @@ Vrať POUZE čistý JSON objekt bez markdownu v tomto formátu:
       {mainTab === 'hiragana' && (
         <div id="section-hiragana">
           <div className="jp-filters" style={{ marginBottom: '1.5rem' }}>
-            <button className={`jp-filter-btn ${hiraganaSub === 'basic' ? 'active' : ''}`} onClick={() => setHiraganaSub('basic')}>Základní (46)</button>
-            <button className={`jp-filter-btn ${hiraganaSub === 'dakuon' ? 'active' : ''}`} onClick={() => setHiraganaSub('dakuon')}>Znělé / Dakuon (25)</button>
+            <button className={`jp-filter-btn ${hiraganaSub === 'basic' ? 'active' : ''}`} onClick={() => setHiraganaSub('basic')}>{currentLang === 'en' ? 'Basic (46)' : 'Základní (46)'}</button>
+            <button className={`jp-filter-btn ${hiraganaSub === 'dakuon' ? 'active' : ''}`} onClick={() => setHiraganaSub('dakuon')}>{currentLang === 'en' ? 'Voiced / Dakuon (25)' : 'Znělé / Dakuon (25)'}</button>
           </div>
           <div className="alphabet-grid">
             {(hiraganaSub === 'basic' ? hiraganaBasic : hiraganaDakuon).map((item, idx) => (
@@ -337,8 +337,8 @@ Vrať POUZE čistý JSON objekt bez markdownu v tomto formátu:
       {mainTab === 'katakana' && (
         <div id="section-katakana">
           <div className="jp-filters" style={{ marginBottom: '1.5rem' }}>
-            <button className={`jp-filter-btn ${katakanaSub === 'basic' ? 'active' : ''}`} onClick={() => setKatakanaSub('basic')}>Základní (46)</button>
-            <button className={`jp-filter-btn ${katakanaSub === 'dakuon' ? 'active' : ''}`} onClick={() => setKatakanaSub('dakuon')}>Znělé / Dakuon (25)</button>
+            <button className={`jp-filter-btn ${katakanaSub === 'basic' ? 'active' : ''}`} onClick={() => setKatakanaSub('basic')}>{currentLang === 'en' ? 'Basic (46)' : 'Základní (46)'}</button>
+            <button className={`jp-filter-btn ${katakanaSub === 'dakuon' ? 'active' : ''}`} onClick={() => setKatakanaSub('dakuon')}>{currentLang === 'en' ? 'Voiced / Dakuon (25)' : 'Znělé / Dakuon (25)'}</button>
           </div>
           <div className="alphabet-grid">
             {(katakanaSub === 'basic' ? katakanaBasic : katakanaDakuon).map((item, idx) => (

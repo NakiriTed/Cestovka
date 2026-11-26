@@ -15,35 +15,35 @@ export function MapPage() {
   const plansDB = {
     'Tokyo': {
       lat: 35.6762, lng: 139.6503, plans: [
-        { planId: 'jp-gold', title: 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
-        { planId: 'jp-anime', title: 'Akihabara & Pop-Kultura (12 dní)', term: 'Obsazeno', tag: 'Zábava' }
+        { planId: 'jp-gold', title: isEn ? 'Classic Japan: Golden Route (14 days)' : 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: isEn ? 'Active date' : 'Aktivní termín' },
+        { planId: 'jp-anime', title: isEn ? 'Akihabara & Pop Culture (12 days)' : 'Akihabara & Pop-Kultura (12 dní)', term: isEn ? 'Sold out' : 'Obsazeno', tag: isEn ? 'Fun' : 'Zábava' }
       ]
     },
     'Kyoto': {
       lat: 35.0116, lng: 135.7681, plans: [
-        { planId: 'jp-gold', title: 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
-        { planId: 'jp-anime', title: 'Akihabara & Pop-Kultura (12 dní)', term: 'Obsazeno', tag: 'Zábava' }
+        { planId: 'jp-gold', title: isEn ? 'Classic Japan: Golden Route (14 days)' : 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: isEn ? 'Active date' : 'Aktivní termín' },
+        { planId: 'jp-anime', title: isEn ? 'Akihabara & Pop Culture (12 days)' : 'Akihabara & Pop-Kultura (12 dní)', term: isEn ? 'Sold out' : 'Obsazeno', tag: isEn ? 'Fun' : 'Zábava' }
       ]
     },
     'Osaka': {
       lat: 34.6937, lng: 135.5023, plans: [
-        { planId: 'jp-gold', title: 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
-        { planId: 'jp-anime', title: 'Akihabara & Pop-Kultura (12 dní)', term: 'Obsazeno', tag: 'Zábava' }
+        { planId: 'jp-gold', title: isEn ? 'Classic Japan: Golden Route (14 days)' : 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: isEn ? 'Active date' : 'Aktivní termín' },
+        { planId: 'jp-anime', title: isEn ? 'Akihabara & Pop Culture (12 days)' : 'Akihabara & Pop-Kultura (12 dní)', term: isEn ? 'Sold out' : 'Obsazeno', tag: isEn ? 'Fun' : 'Zábava' }
       ]
     },
     'Soul (Seoul)': {
       lat: 37.5665, lng: 126.9780, plans: [
-        { planId: 'kr-seoul', title: 'Korejská metropole & Historie (10 dní)', term: '1. 6. - 10. 6. 2026', tag: 'Exotika' }
+        { planId: 'kr-seoul', title: isEn ? 'Best of South Korea (10 days)' : 'Korejská metropole & Historie (10 dní)', term: '1. 6. - 10. 6. 2026', tag: isEn ? 'Culture' : 'Exotika' }
       ]
     },
     'Pusan (Busan)': {
       lat: 35.1796, lng: 129.0756, plans: [
-        { planId: 'kr-seoul', title: 'Korejská metropole & Historie (10 dní)', term: '1. 6. - 10. 6. 2026', tag: 'Přístav' }
+        { planId: 'kr-seoul', title: isEn ? 'Best of South Korea (10 days)' : 'Korejská metropole & Historie (10 dní)', term: '1. 6. - 10. 6. 2026', tag: isEn ? 'Port city' : 'Přístav' }
       ]
     },
     'Fuji (Kawaguchiko)': {
       lat: 35.5031, lng: 138.7679, plans: [
-        { planId: 'jp-gold', title: 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Ikona' }
+        { planId: 'jp-gold', title: isEn ? 'Classic Japan: Golden Route (14 days)' : 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: isEn ? 'Icon' : 'Ikona' }
       ]
     }
   };
@@ -107,7 +107,7 @@ export function MapPage() {
 
         if (hasPlans) {
           data.plans.forEach(p => {
-            const isSoldOut = p.term === 'Obsazeno';
+            const isSoldOut = p.term === 'Obsazeno' || p.term === 'Sold out';
             const url = isSoldOut
               ? `/planner?plan=${encodeURIComponent(p.planId)}`
               : `/planner?plan=${encodeURIComponent(p.planId)}&date=${encodeURIComponent(p.term)}`;
@@ -125,12 +125,12 @@ export function MapPage() {
                   font-size: 0.78rem;
                   font-weight: 600;
                   cursor: pointer;
-                ">Zobrazit zájezd →</a>
+                ">${isEn ? 'View trip →' : 'Zobrazit zájezd →'}</a>
               </div>
             `;
           });
         } else {
-          popupContent += `<p style="color:#888; margin:0;">Sem teď nejezdíme</p>`;
+          popupContent += `<p style="color:#888; margin:0;">${isEn ? 'No active trips here right now' : 'Sem teď nejezdíme'}</p>`;
         }
 
         popupContent += `</div>`;
@@ -180,7 +180,7 @@ export function MapPage() {
         tileLayerRef.current = null;
       }
     };
-  }, []);
+  }, [isEn]);
 
   // Swap tile layer reactively when theme changes
   useEffect(() => {

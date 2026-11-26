@@ -23,9 +23,9 @@ export function Navbar() {
       <div className="nav-container">
         <Link to="/" className="logo" onClick={closeMobileMenu}>
           <i className="fa-solid fa-torii-gate"></i>{' '}
-          <span style={{ color: '#ff66b2' }}>Tedův</span>{' '}
-          <span style={{ color: 'var(--text-main)' }}>východní</span>{' '}
-          <span style={{ color: '#ff3333' }}>svět</span>
+          <span style={{ color: '#ff66b2' }}>{currentLang === 'en' ? "Ted's" : 'Tedův'}</span>{' '}
+          <span style={{ color: 'var(--text-main)' }}>{currentLang === 'en' ? 'Eastern' : 'východní'}</span>{' '}
+          <span style={{ color: '#ff3333' }}>{currentLang === 'en' ? 'World' : 'svět'}</span>
         </Link>
 
         <ul className={`nav-links ${mobileMenuOpen ? 'nav-active' : ''}`}>

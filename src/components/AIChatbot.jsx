@@ -9,8 +9,27 @@ export function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'Ahoj! Jsem Tedův AI asistent. Zeptej se mě na cokoliv ohledně cesty do Japonska nebo Koreje! 🌸' }
+    {
+      sender: 'bot',
+      text: isEn
+        ? "Hi! I'm Ted's AI assistant. Ask me anything about traveling to Japan or South Korea! 🌸"
+        : 'Ahoj! Jsem Tedův AI asistent. Zeptej se mě na cokoliv ohledně cesty do Japonska nebo Koreje! 🌸'
+    }
   ]);
+
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].sender === 'bot') {
+        return [{
+          sender: 'bot',
+          text: isEn
+            ? "Hi! I'm Ted's AI assistant. Ask me anything about traveling to Japan or South Korea! 🌸"
+            : 'Ahoj! Jsem Tedův AI asistent. Zeptej se mě na cokoliv ohledně cesty do Japonska nebo Koreje! 🌸'
+        }];
+      }
+      return prev;
+    });
+  }, [isEn]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
@@ -34,25 +53,39 @@ export function AIChatbot() {
   // Smart Local Fallback Knowledge Base
   const getLocalResponse = (q) => {
     const query = q.toLowerCase();
-    if (query.includes('víz') || query.includes('viz')) {
-      return 'Do Japonska i Jižní Koreje cestují občané ČR i SR bez víz na dobu až 90 dnů zdarma! Stačí vám platný pas.';
+    if (query.includes('víz') || query.includes('viz') || query.includes('visa')) {
+      return isEn
+        ? 'Citizens of the EU/CZ/SK can travel to Japan and South Korea visa-free for up to 90 days! A valid passport is all you need.'
+        : 'Do Japonska i Jižní Koreje cestují občané ČR i SR bez víz na dobu až 90 dnů zdarma! Stačí vám platný pas.';
     }
-    if (query.includes('cen') || query.includes('kolik') || query.includes('stojí') || query.includes('platit')) {
-      return 'Naše zájezdy začínají od 49 900 Kč (Korejská metropole) až po 64 900 Kč (Zlatý okruh Japonskem na 14 dní). Cena zahrnuje ubytování, dopravu šinkanseny i průvodce.';
+    if (query.includes('cen') || query.includes('kolik') || query.includes('stojí') || query.includes('platit') || query.includes('much') || query.includes('price') || query.includes('cost')) {
+      return isEn
+        ? 'Our guided tours start from 49,900 CZK (Best of South Korea) up to 64,900 CZK (Classic Japan Golden Route for 14 days). The price includes flights, hotels, Shinkansen/KTX trains, and a guide.'
+        : 'Naše zájezdy začínají od 49 900 Kč (Korejská metropole) až po 64 900 Kč (Zlatý okruh Japonskem na 14 dní). Cena zahrnuje ubytování, dopravu šinkanseny i průvodce.';
     }
     if (query.includes('tokio') || query.includes('tokyo')) {
-      return 'V Tokiu doporučujeme navštívit křižovatku Shibuya, čtvrť anime Akihabara, chrám Senso-ji v Asakuse a výhled z Tokyo Tower!';
+      return isEn
+        ? 'In Tokyo we recommend visiting Shibuya Crossing, the Akihabara anime district, Senso-ji Temple in Asakusa, and the view from Tokyo Tower!'
+        : 'V Tokiu doporučujeme navštívit křižovatku Shibuya, čtvrť anime Akihabara, chrám Senso-ji v Asakuse a výhled z Tokyo Tower!';
     }
-    if (query.includes('jídlo') || query.includes('jidlo') || query.includes('ramen') || query.includes('sushi') || query.includes('bbq')) {
-      return 'Určitě vyzkoušejte pravý japonský Ramen, Suši na rybím trhu Tsukiji, takoyaki v Ósace a korejské BBQ (Samgyeopsal) s kvašeným Kimchi!';
+    if (query.includes('jídlo') || query.includes('jidlo') || query.includes('ramen') || query.includes('sushi') || query.includes('bbq') || query.includes('food')) {
+      return isEn
+        ? 'Definitely try authentic Japanese Ramen, Sushi at Tsukiji fish market, takoyaki in Osaka, and Korean BBQ (Samgyeopsal) with fermented Kimchi!'
+        : 'Určitě vyzkoušejte pravý japonský Ramen, Suši na rybím trhu Tsukiji, takoyaki v Ósace a korejské BBQ (Samgyeopsal) s kvašeným Kimchi!';
     }
     if (query.includes('korea') || query.includes('soul') || query.includes('seoul')) {
-      return 'V Koreji musíte vidět palác Gyeongbokgung v Soulu, pláže a barevnou vesničku Gamcheon v Pusanu a sopečný ostrov Jeju.';
+      return isEn
+        ? 'In South Korea you must see Gyeongbokgung Palace in Seoul, the beaches and colorful Gamcheon Culture Village in Busan, and volcanic Jeju Island.'
+        : 'V Koreji musíte vidět palác Gyeongbokgung v Soulu, pláže a barevnou vesničku Gamcheon v Pusanu a sopečný ostrov Jeju.';
     }
-    if (query.includes('kdy') || query.includes('jako') || query.includes('jaro') || query.includes('sakur')) {
-      return 'Nejlepší období pro návštěvu je jaro (březen–květen, kvetení sakur) nebo podzim (říjen–listopad, rudé javorové listy).';
+    if (query.includes('kdy') || query.includes('jako') || query.includes('jaro') || query.includes('sakur') || query.includes('when') || query.includes('cherry') || query.includes('blossom')) {
+      return isEn
+        ? 'The best time to visit is spring (March–May, cherry blossom season) or autumn (October–November, vibrant red maple leaves).'
+        : 'Nejlepší období pro návštěvu je jaro (březen–květen, kvetení sakur) nebo podzim (říjen–listopad, rudé javorové listy).';
     }
-    return 'Japonsko i Korea nabízejí úžasné spojení tradic a budoucnosti! Podívejte se do našeho Plánovače na konkrétní itineráře, nebo mi napište konkrétnější dotaz.';
+    return isEn
+      ? 'Both Japan and South Korea offer an amazing blend of ancient tradition and the future! Check out our Planner for detailed itineraries, or ask me a more specific question.'
+      : 'Japonsko i Korea nabízejí úžasné spojení tradic a budoucnosti! Podívejte se do našeho Plánovače na konkrétní itineráře, nebo mi napište konkrétnější dotaz.';
   };
 
   const handleSendQuery = async (queryText) => {
@@ -70,7 +103,9 @@ export function AIChatbot() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [
-              { role: 'user', parts: [{ text: `Jsi přátelský asistent pro cestovatelský web 'Tedův Východní Svět' (zájezdy a průvodce po Japonsku a Jižní Koreji). Odpověz stručně, přehledně a přátelsky na dotaz: ${text}` }] }
+              { role: 'user', parts: [{ text: isEn
+                ? `You are a friendly assistant for the travel website "Ted's Eastern World" (guided tours and guides for Japan and South Korea). Answer concisely, clearly, and friendly in English to the question: ${text}`
+                : `Jsi přátelský asistent pro cestovatelský web 'Tedův Východní Svět' (zájezdy a průvodce po Japonsku a Jižní Koreji). Odpověz stručně, přehledně a přátelsky na dotaz: ${text}` }] }
             ]
           })
         });
@@ -198,7 +233,7 @@ export function AIChatbot() {
 
             {isTyping && (
               <div style={{ alignSelf: 'flex-start', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                <i className="fa-solid fa-ellipsis fa-beat"></i> AI Asistent píše...
+                <i className="fa-solid fa-ellipsis fa-beat"></i> {isEn ? 'AI Assistant is typing...' : 'AI Asistent píše...'}
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -221,7 +256,7 @@ export function AIChatbot() {
           <div style={{ padding: '0.8rem', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '8px' }}>
             <input 
               type="text" 
-              placeholder="Napiš zprávu..." 
+              placeholder={isEn ? 'Type a message...' : 'Napiš zprávu...'} 
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendQuery()}

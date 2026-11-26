@@ -67,9 +67,56 @@ export function ForumPage() {
     setReplyText('');
   };
 
-  const categories = ['Všechna témata', 'Dotazy před cestou', 'Cestopisy & Tipy', 'Hledám parťáka', 'Pokec o všem'];
+  const categories = [
+    { key: 'Všechna témata', en: 'All Topics' },
+    { key: 'Dotazy před cestou', en: 'Pre-trip Questions' },
+    { key: 'Cestopisy & Tipy', en: 'Travel Stories & Tips' },
+    { key: 'Hledám parťáka', en: 'Looking for a Travel Buddy' },
+    { key: 'Pokec o všem', en: 'General Chat' }
+  ];
 
-  const safeThreads = threads || [];
+  const translateCategory = (cat) => {
+    const found = categories.find(c => c.key === cat);
+    return isEn && found ? found.en : cat;
+  };
+
+  const EN_THREADS = {
+    'Jak funguje JR Pass v roce 2026?': {
+      title: 'How does the JR Pass work in 2026?',
+      content: 'Hi everyone, is the nationwide JR Pass still worth it for a 14-day trip (Tokyo – Kyoto – Osaka – Hiroshima), or is it better to buy individual Shinkansen tickets?',
+      replies: [
+        { text: 'Since the price increase, the 14-day JR Pass only pays off if you also go to Hiroshima and Kanazawa. For just the Golden Route, individual tickets via SmartEX are cheaper!' }
+      ]
+    },
+    'K-ETA do Jižní Koreje – aktuální zkušenosti': {
+      title: 'K-ETA for South Korea – current experience',
+      content: 'Hey travelers! Do Czech citizens still have an exemption from K-ETA registration, or do we need to fill it out before flying to Seoul?',
+      replies: [
+        { text: 'Just got back from Seoul last week – with a Czech passport you just fill out the arrival card on the plane, no K-ETA needed!' }
+      ]
+    },
+    'Co si sbalit do Japonska na jaro?': {
+      title: 'What to pack for Japan in spring?',
+      content: 'We are flying on the Golden Route in May. What shoes and clothes worked best for you when walking 15–20 km a day?'
+    }
+  };
+
+  const localizeThread = (thread) => {
+    if (!isEn || !thread) return thread;
+    const tr = EN_THREADS[thread.title];
+    if (!tr) return thread;
+    return {
+      ...thread,
+      title: tr.title || thread.title,
+      content: tr.content || thread.content,
+      replies: (thread.replies || []).map((r, i) => ({
+        ...r,
+        text: tr.replies?.[i]?.text || r.text
+      }))
+    };
+  };
+
+  const safeThreads = (threads || []).map(localizeThread);
   const filteredThreads = activeCategory === 'Všechna témata' || activeCategory === 'all'
     ? safeThreads 
     : safeThreads.filter(t => t.category === activeCategory);
@@ -85,12 +132,12 @@ export function ForumPage() {
             style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', marginBottom: '2rem' }}
             onClick={() => setSelectedThread(null)}
           >
-            <i className="fa-solid fa-arrow-left"></i> Zpět na přehled fóra
+            <i className="fa-solid fa-arrow-left"></i> {isEn ? 'Back to forum overview' : 'Zpět na přehled fóra'}
           </button>
 
           <div style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '1.5rem', marginBottom: '2rem' }}>
             <span className="phrase-category-tag" style={{ position: 'static', display: 'inline-block', marginBottom: '0.8rem' }}>
-              {selectedThread.category}
+              {translateCategory(selectedThread.category)}
             </span>
             <h1 style={{ fontSize: '2.2rem', margin: '0.3rem 0 1rem', lineHeight: 1.2 }}>{selectedThread.title}</h1>
             
@@ -106,12 +153,12 @@ export function ForumPage() {
 
           {/* Replies Section */}
           <h3 style={{ marginBottom: '1.5rem' }}>
-            <i className="fa-solid fa-comments" style={{ color: 'var(--accent-color)' }}></i> Odpovědi ({(selectedThread.replies || []).length})
+            <i className="fa-solid fa-comments" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Replies' : 'Odpovědi'} ({(selectedThread.replies || []).length})
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '2.5rem' }}>
             {!(selectedThread.replies && selectedThread.replies.length > 0) ? (
-              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Zatím žádné odpovědi. Napište první odpoveď níže!</p>
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>{isEn ? 'No replies yet. Write the first reply below!' : 'Zatím žádné odpovědi. Napište první odpoveď níže!'}</p>
             ) : (
               selectedThread.replies.map(reply => (
                 <div key={reply.id} className="glass" style={{ padding: '1.2rem 1.5rem', borderRadius: '16px', borderLeft: '3px solid var(--accent-color)' }}>
@@ -180,10 +227,10 @@ export function ForumPage() {
               {categories.map((cat, idx) => (
                 <button 
                   key={idx}
-                  className={`filter-btn ${activeCategory === cat || (activeCategory === 'all' && idx === 0) ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(cat === 'Všechna témata' ? 'all' : cat)}
+                  className={`filter-btn ${activeCategory === cat.key || (activeCategory === 'all' && idx === 0) ? 'active' : ''}`}
+                  onClick={() => setActiveCategory(cat.key === 'Všechna témata' ? 'all' : cat.key)}
                 >
-                  {cat}
+                  {isEn ? cat.en : cat.key}
                 </button>
               ))}
             </div>
@@ -193,7 +240,7 @@ export function ForumPage() {
           {showNewThreadModal && (
             <div className="cms-modal active" role="dialog" aria-modal="true" aria-label={isEn ? 'Create new topic' : 'Vytvořit nové téma'} onClick={() => setShowNewThreadModal(false)}>
               <div className="cms-modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-                <button type="button" aria-label="Zavřít" className="close-modal" onClick={() => setShowNewThreadModal(false)}><i className="fa-solid fa-xmark"></i></button>
+                <button type="button" aria-label={isEn ? 'Close' : 'Zavřít'} className="close-modal" onClick={() => setShowNewThreadModal(false)}><i className="fa-solid fa-xmark"></i></button>
                 <h2 style={{ marginBottom: '1.5rem', color: 'var(--accent-color)' }}><i className="fa-solid fa-pen-to-square"></i> {isEn ? 'Create New Topic' : 'Vytvořit nové téma'}</h2>
                 
                 <form onSubmit={handleCreateThread}>
@@ -214,10 +261,10 @@ export function ForumPage() {
                       value={newCategory} onChange={e => setNewCategory(e.target.value)}
                       style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: 'var(--text-main)' }}
                     >
-                      <option value="Dotazy před cestou">Dotazy před cestou</option>
-                      <option value="Cestopisy & Tipy">Cestopisy & Tipy</option>
-                      <option value="Hledám parťáka">Hledám parťáka</option>
-                      <option value="Pokec o všem">Pokec o všem</option>
+                      <option value="Dotazy před cestou">{isEn ? 'Pre-trip Questions' : 'Dotazy před cestou'}</option>
+                      <option value="Cestopisy & Tipy">{isEn ? 'Travel Stories & Tips' : 'Cestopisy & Tipy'}</option>
+                      <option value="Hledám parťáka">{isEn ? 'Looking for a Travel Buddy' : 'Hledám parťáka'}</option>
+                      <option value="Pokec o všem">{isEn ? 'General Chat' : 'Pokec o všem'}</option>
                     </select>
                   </div>
 
@@ -259,7 +306,7 @@ export function ForumPage() {
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedThread(thread); } }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '0.6rem' }}>
-                  <span className="phrase-category-tag" style={{ position: 'static' }}>{thread.category}</span>
+                  <span className="phrase-category-tag" style={{ position: 'static' }}>{translateCategory(thread.category)}</span>
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{thread.date}</span>
                 </div>
 

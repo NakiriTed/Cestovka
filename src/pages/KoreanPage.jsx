@@ -287,9 +287,9 @@ Vrať POUZE čistý JSON objekt bez markdownu v tomto formátu:
       {mainTab === 'hangul' && (
         <div id="section-hangul">
           <div className="ko-filters" style={{ marginBottom: '1.5rem' }}>
-            <button className={`ko-filter-btn ${hangulSub === 'consonants' ? 'active' : ''}`} onClick={() => setHangulSub('consonants')}>Souhlásky (14)</button>
-            <button className={`ko-filter-btn ${hangulSub === 'vowels' ? 'active' : ''}`} onClick={() => setHangulSub('vowels')}>Samohlásky (10)</button>
-            <button className={`ko-filter-btn ${hangulSub === 'double' ? 'active' : ''}`} onClick={() => setHangulSub('double')}>Zdvojené (16)</button>
+            <button className={`ko-filter-btn ${hangulSub === 'consonants' ? 'active' : ''}`} onClick={() => setHangulSub('consonants')}>{currentLang === 'en' ? 'Consonants (14)' : 'Souhlásky (14)'}</button>
+            <button className={`ko-filter-btn ${hangulSub === 'vowels' ? 'active' : ''}`} onClick={() => setHangulSub('vowels')}>{currentLang === 'en' ? 'Vowels (10)' : 'Samohlásky (10)'}</button>
+            <button className={`ko-filter-btn ${hangulSub === 'double' ? 'active' : ''}`} onClick={() => setHangulSub('double')}>{currentLang === 'en' ? 'Double / Diphthongs (16)' : 'Zdvojené (16)'}</button>
           </div>
           <div className="alphabet-grid">
             {(hangulSub === 'consonants' ? hangulConsonants : hangulSub === 'vowels' ? hangulVowels : hangulDouble).map((item, idx) => (
