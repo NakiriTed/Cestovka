@@ -3,7 +3,7 @@ import {
   db, auth, isConfigured, doc, getDoc, setDoc, onAuthStateChanged, signOut,
   signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, 
   createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail
-} from '../../firebase-config.js';
+} from '../firebase';
 
 const AuthContext = createContext();
 

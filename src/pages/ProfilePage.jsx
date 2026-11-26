@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import { compressImageToDataUrl, db, collection, query, where, getDocs } from '../firebase';
 
 export function ProfilePage() {
-  const { currentUser, userProfile, logout, updateUserProfile } = useAuth();
+  const { currentUser, userProfile, logout, updateUserProfile, openLoginModal } = useAuth();
+  const { itineraries, deleteItinerary } = useData();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -82,12 +85,22 @@ export function ProfilePage() {
     return (
       <main style={{ maxWidth: '600px', margin: '6rem auto', padding: '2rem', textAlign: 'center' }}>
         <div className="glass" style={{ padding: '3rem', borderRadius: '20px' }}>
-          <h2>Uživatel není přihlášen</h2>
-          <p style={{ color: 'var(--text-muted)', margin: '1rem 0' }}>Pro zobrazení profilu se musíte nejprve přihlásit.</p>
+          <h1 style={{ fontSize: '2rem', marginBottom: '0.8rem' }}>Uživatel není přihlášen</h1>
+          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 1.5rem' }}>Pro zobrazení profilu, uložených itinerářů a rezervací se prosím přihlaste.</p>
+          <button type="button" className="btn btn-primary" onClick={openLoginModal}>
+            <i className="fa-solid fa-right-to-bracket"></i> Přihlásit se
+          </button>
         </div>
       </main>
     );
   }
+
+  let savedFavoriteIds = [];
+  try {
+    savedFavoriteIds = JSON.parse(localStorage.getItem('favorites') || '[]');
+  } catch {}
+  const favoritePlans = itineraries.filter(it => savedFavoriteIds.includes(it.id));
+  const myCustomPlans = itineraries.filter(it => it.isCustom && (!it.ownerId || it.ownerId === currentUser.uid));
 
   return (
     <main style={{ maxWidth: '850px', margin: '0 auto', padding: '6rem 2rem 3rem' }}>
@@ -227,11 +240,73 @@ export function ProfilePage() {
             </div>
           )}
 
-          <button className="btn" style={{ marginTop: '2rem', background: '#e74c3c', color: '#fff', width: '100%' }} onClick={logout}>
+          <button className="btn" style={{ marginTop: '2rem', background: '#d90429', color: '#fff', width: '100%' }} onClick={logout}>
             <i className="fa-solid fa-right-from-bracket"></i> Odhlásit se
           </button>
         </div>
 
+      </div>
+
+      {/* Personalization: User's Custom Itineraries & Favorite Plans */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '2rem' }}>
+        <div className="glass" style={{ padding: '2rem', borderRadius: '20px' }}>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: 'var(--accent-color)' }}>
+            <i className="fa-solid fa-wand-magic-sparkles"></i> Moje vlastní itineráře ({myCustomPlans.length})
+          </h2>
+          {myCustomPlans.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+              Zatím jste si nesestavili vlastní itinerář. Můžete si ho vytvořit v sekci <Link to="/planner" style={{ color: 'var(--accent-color)' }}>Plánovač</Link>.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              {myCustomPlans.map(plan => (
+                <div key={plan.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.9rem 1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                  <div>
+                    <Link to={`/planner?plan=${encodeURIComponent(plan.id)}`} style={{ color: 'var(--text-main)', fontWeight: 700, textDecoration: 'none' }}>
+                      {plan.title}
+                    </Link>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{plan.country} • {plan.duration}</div>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Smazat vlastní itinerář"
+                    onClick={() => deleteItinerary(plan.id)}
+                    style={{ background: 'rgba(231,76,60,0.2)', border: '1px solid #e74c3c', color: '#ff8a80', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer' }}
+                  >
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="glass" style={{ padding: '2rem', borderRadius: '20px' }}>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: 'var(--accent-color)' }}>
+            <i className="fa-solid fa-heart"></i> Oblíbené zájezdy ({favoritePlans.length})
+          </h2>
+          {favoritePlans.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+              Zatím nemáte uložené žádné oblíbené zájezdy. Označte je srdíčkem v <Link to="/planner" style={{ color: 'var(--accent-color)' }}>Plánovači</Link>.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              {favoritePlans.map(plan => (
+                <Link
+                  key={plan.id}
+                  to={`/planner?plan=${encodeURIComponent(plan.id)}`}
+                  style={{ background: 'rgba(255,255,255,0.05)', padding: '0.9rem 1rem', borderRadius: '12px', textDecoration: 'none', color: 'var(--text-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{plan.title}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{plan.country} • {plan.duration}</div>
+                  </div>
+                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>{plan.price.toLocaleString('cs-CZ')} Kč</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );

@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, query, where } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFirestore, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, setDoc, query, where, orderBy, serverTimestamp, increment } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from "firebase/auth";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDxJ3Ew2mLKs15nVFdQUV9PQZw_qL2avTY",
@@ -11,8 +12,10 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:660762572264:web:671edd553bc734d82ce05d"
 };
 
+const isConfigured = true;
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app, "cestovka"); // Using the custom database ID from seed script
+const auth = getAuth(app);
 const storage = getStorage(app);
 
 /**
@@ -61,4 +64,11 @@ export async function uploadImageToFirestore(file, maxWidth = 1400, quality = 0.
   return dataUrl;
 }
 
-export { db, storage, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, ref, uploadBytes, getDownloadURL, query, where };
+export {
+  db, auth, storage, isConfigured,
+  collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, setDoc, query, where, orderBy, serverTimestamp, increment,
+  signInWithEmailAndPassword, onAuthStateChanged, signOut,
+  signInWithPopup, GoogleAuthProvider, FacebookAuthProvider,
+  createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail,
+  ref, uploadBytes, getDownloadURL, deleteObject
+};

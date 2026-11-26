@@ -12,6 +12,7 @@ export function KoreanPage() {
   // AI Tutor & Quiz State
   const [aiInput, setAiInput] = useState('');
   const [aiResult, setAiResult] = useState(null);
+  const [aiError, setAiError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
@@ -118,6 +119,13 @@ export function KoreanPage() {
     if (!aiInput.trim()) return;
     setAiLoading(true);
     setAiResult(null);
+    setAiError('');
+
+    if (!GEMINI_API_KEY) {
+      setAiError(currentLang === 'en' ? 'AI service is currently unavailable (missing API key on server).' : 'Služba AI překladače momentálně není dostupná (chybí API klíč v prostředí).');
+      setAiLoading(false);
+      return;
+    }
 
     try {
       const prompt = `Přelož tuto větu do přirozené korejštiny (zdvořilý styl -yo/-nida) pro cestovatele: "${aiInput.trim()}".
@@ -129,20 +137,17 @@ Vrať POUZE čistý JSON objekt bez markdownu v tomto formátu:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] })
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const jsonMatch = rawText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         setAiResult(JSON.parse(jsonMatch[0]));
       } else {
-        setAiResult({ kr: '감사합니다', romaji: 'Gamsahamnida', explanation: rawText || 'Nepodařilo se zpracovat odpověď.' });
+        setAiError(currentLang === 'en' ? 'Could not parse AI response. Please try again.' : 'Odpověď AI se nepodařilo zpracovat. Zkuste to prosím znovu.');
       }
     } catch {
-      setAiResult({
-        kr: '추천해 주시겠어요?',
-        romaji: 'Chucheonhae jusigesseoyo?',
-        explanation: currentLang === 'en' ? 'Offline fallback: "What do you recommend?"' : 'Ukázkový překlad (offline režim): „Co doporučujete?“'
-      });
+      setAiError(currentLang === 'en' ? 'AI service is temporarily unavailable. Please check your connection or API key.' : 'AI překladač je momentálně nedostupný. Zkontrolujte připojení nebo API klíč.');
     } finally {
       setAiLoading(false);
     }
@@ -237,8 +242,12 @@ Vrať POUZE čistý JSON objekt bez markdownu v tomto formátu:
             {filteredPhrases.map((p, idx) => (
               <div 
                 key={idx} 
+                role="button"
+                tabIndex={0}
+                aria-pressed={!!flippedCards[idx]}
                 className={`phrase-card ${flippedCards[idx] ? 'flipped' : ''}`}
                 onClick={() => toggleCardFlip(idx)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCardFlip(idx); } }}
               >
                 <div className="phrase-card-inner">
                   <div className="phrase-front glass">
@@ -319,6 +328,12 @@ Vrať POUZE čistý JSON objekt bez markdownu v tomto formátu:
                 {aiLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
               </button>
             </form>
+
+            {aiError && (
+              <div role="alert" style={{ background: 'rgba(231, 76, 60, 0.14)', border: '1px solid #e74c3c', color: '#ff8a80', borderRadius: '14px', padding: '1rem', fontSize: '0.9rem' }}>
+                <i className="fa-solid fa-triangle-exclamation"></i> {aiError}
+              </div>
+            )}
 
             {aiResult && (
               <div style={{ background: 'rgba(239,35,60,0.08)', border: '1px solid rgba(239,35,60,0.3)', borderRadius: '16px', padding: '1.2rem' }}>

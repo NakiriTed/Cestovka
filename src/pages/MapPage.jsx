@@ -12,19 +12,19 @@ export function MapPage() {
   const plansDB = {
     'Tokyo': {
       lat: 35.6762, lng: 139.6503, plans: [
-        { planId: 'jp-gold', title: 'Zlátý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
+        { planId: 'jp-gold', title: 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
         { planId: 'jp-anime', title: 'Akihabara & Pop-Kultura (12 dní)', term: 'Obsazeno', tag: 'Zábava' }
       ]
     },
     'Kyoto': {
       lat: 35.0116, lng: 135.7681, plans: [
-        { planId: 'jp-gold', title: 'Zlátý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
+        { planId: 'jp-gold', title: 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
         { planId: 'jp-anime', title: 'Akihabara & Pop-Kultura (12 dní)', term: 'Obsazeno', tag: 'Zábava' }
       ]
     },
     'Osaka': {
       lat: 34.6937, lng: 135.5023, plans: [
-        { planId: 'jp-gold', title: 'Zlátý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
+        { planId: 'jp-gold', title: 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Aktivní termín' },
         { planId: 'jp-anime', title: 'Akihabara & Pop-Kultura (12 dní)', term: 'Obsazeno', tag: 'Zábava' }
       ]
     },
@@ -40,7 +40,7 @@ export function MapPage() {
     },
     'Fuji (Kawaguchiko)': {
       lat: 35.5031, lng: 138.7679, plans: [
-        { planId: 'jp-gold', title: 'Zlátý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Ikona' }
+        { planId: 'jp-gold', title: 'Zlatý okruh Japonskem (14 dní)', term: '14. 5. - 28. 5. 2026', tag: 'Ikona' }
       ]
     }
   };
@@ -104,7 +104,10 @@ export function MapPage() {
 
         if (hasPlans) {
           data.plans.forEach(p => {
-            const url = `/planner?plan=${encodeURIComponent(p.planId)}&date=${encodeURIComponent(p.term)}`;
+            const isSoldOut = p.term === 'Obsazeno';
+            const url = isSoldOut
+              ? `/planner?plan=${encodeURIComponent(p.planId)}`
+              : `/planner?plan=${encodeURIComponent(p.planId)}&date=${encodeURIComponent(p.term)}`;
             popupContent += `
               <div style="margin-bottom: 10px; padding: 8px; background: rgba(239,35,60,0.07); border-radius: 8px; border: 1px solid rgba(239,35,60,0.2);">
                 <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 2px;">${p.title}</div>
@@ -156,6 +159,14 @@ export function MapPage() {
       const script = document.createElement('script');
       script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
       script.onload = initMap;
+      script.onerror = () => {
+        const fallbackCss = document.getElementById('leaflet-css');
+        if (fallbackCss) fallbackCss.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+        fallbackScript.onload = initMap;
+        document.head.appendChild(fallbackScript);
+      };
       document.head.appendChild(script);
     }
 
@@ -184,9 +195,9 @@ export function MapPage() {
   }, [theme]);
 
   return (
-    <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '6rem 2rem 3rem' }}>
+    <main className="map-wrap" style={{ maxWidth: '1200px', margin: '0 auto', padding: '6rem 2rem 3rem' }}>
       <div className="glass" style={{ padding: '2rem', borderRadius: '20px', textAlign: 'center', marginBottom: '2rem' }}>
-        <h2><i className="fa-solid fa-map-location-dot" style={{ color: 'var(--accent-color)' }}></i> Interaktivní mapa zájezdů</h2>
+        <h1 style={{ fontSize: '2.4rem' }}><i className="fa-solid fa-map-location-dot" style={{ color: 'var(--accent-color)' }}></i> Interaktivní mapa zájezdů</h1>
         <p style={{ color: 'var(--text-muted)' }}>Klikněte na svítící bod na mapě a zjistěte, které plány vás do tohoto místa zavedou.</p>
       </div>
 

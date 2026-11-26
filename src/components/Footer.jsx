@@ -8,7 +8,7 @@ export function Footer() {
   return (
     <footer style={{ marginTop: '4rem' }}>
       <div className="footer-inner">
-        <p>&copy; 2026 Tedův východní svět &mdash; {t('footer.rights', 'Všechna práva vyhrazena.')}</p>
+        <p>{t('footer.rights', '© 2026 Tedův východní svět — Všechna práva vyhrazena.')}</p>
         <div className="footer-social">
           <a href="https://www.instagram.com/rikejmited/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
             <i className="fa-brands fa-instagram"></i>

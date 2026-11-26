@@ -60,17 +60,51 @@ export function GalleryPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleAddPhoto = (e) => {
+  const sanitizeVideoEmbedUrl = (rawUrl) => {
+    if (!rawUrl || typeof rawUrl !== 'string') return '';
+    if (rawUrl.startsWith('data:video/')) return rawUrl;
+    try {
+      const parsed = new URL(rawUrl);
+      if (parsed.protocol !== 'https:') return '';
+      if (parsed.hostname === 'www.youtube.com' || parsed.hostname === 'youtube.com') {
+        if (parsed.pathname.startsWith('/embed/')) return parsed.toString();
+        const v = parsed.searchParams.get('v');
+        if (v) return `https://www.youtube.com/embed/${encodeURIComponent(v)}`;
+      }
+      if (parsed.hostname === 'youtu.be') {
+        const id = parsed.pathname.slice(1);
+        if (id) return `https://www.youtube.com/embed/${encodeURIComponent(id)}`;
+      }
+      if (parsed.hostname === 'player.vimeo.com' && parsed.pathname.startsWith('/video/')) {
+        return parsed.toString();
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  };
+
+  const handleAddPhoto = async (e) => {
     e.preventDefault();
     if (!newTitle.trim() || !newUrl.trim()) return;
 
-    addGalleryItem({
+    let safeSrc = newUrl.trim();
+    if (newType === 'video') {
+      safeSrc = sanitizeVideoEmbedUrl(safeSrc);
+      if (!safeSrc) {
+        alert('Pro video prosím zadejte platný HTTPS odkaz na YouTube nebo Vimeo (případně MP4 soubor).');
+        return;
+      }
+    }
+
+    await addGalleryItem({
       type: newType,
       title: newTitle,
       country: newCountry,
       city: newCity,
       place: newPlace || `${newCity}, ${newCountry}`,
-      src: newUrl
+      src: safeSrc,
+      ownerId: currentUser?.uid || null
     });
 
     setNewTitle('');
@@ -244,8 +278,9 @@ export function GalleryPage() {
                     <video src={p.src} controls style={{ width: '100%', height: '100%', objectFit: 'cover' }}></video>
                   ) : (
                     <iframe 
-                      src={p.src} 
+                      src={sanitizeVideoEmbedUrl(p.src)} 
                       title={p.title}
+                      sandbox="allow-scripts allow-same-origin allow-presentation"
                       style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }}
                     ></iframe>
                   )
@@ -315,8 +350,9 @@ export function GalleryPage() {
               ) : (
                 <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, borderRadius: '16px', overflow: 'hidden' }}>
                   <iframe 
-                    src={`${activeItem.src}?autoplay=1`} 
+                    src={`${sanitizeVideoEmbedUrl(activeItem.src)}?autoplay=1`} 
                     title={activeItem.title} 
+                    sandbox="allow-scripts allow-same-origin allow-presentation"
                     allow="autoplay; encrypted-media" 
                     allowFullScreen
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}

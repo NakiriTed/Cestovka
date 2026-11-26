@@ -50,7 +50,7 @@ export function Navbar() {
           </li>
 
           <li className="nav-dropdown">
-            <a href="#" style={{ cursor: 'default' }} onClick={(e) => e.preventDefault()}>
+            <a href="#destinations" role="button" aria-haspopup="true" style={{ cursor: 'pointer' }} onClick={(e) => e.preventDefault()}>
               {t('nav.destinations', 'Destinace')}{' '}
               <i className="fa-solid fa-chevron-down" style={{ fontSize: '0.8rem' }}></i>
             </a>
@@ -61,7 +61,7 @@ export function Navbar() {
           </li>
 
           <li className="nav-dropdown">
-            <a href="#" style={{ cursor: 'default' }} onClick={(e) => e.preventDefault()}>
+            <a href="#languages" role="button" aria-haspopup="true" style={{ cursor: 'pointer' }} onClick={(e) => e.preventDefault()}>
               {t('nav.languages', 'Jazyky')}{' '}
               <i className="fa-solid fa-chevron-down" style={{ fontSize: '0.8rem' }}></i>
             </a>
@@ -90,13 +90,13 @@ export function Navbar() {
           {mobileMenuOpen && !currentUser && (
             <li className="mobile-nav-login-li">
               <button onClick={() => { closeMobileMenu(); openLoginModal(); }}>
-                <i className="fa-solid fa-right-to-bracket"></i> Přihlásit se
+                <i className="fa-solid fa-right-to-bracket"></i> {t('nav.login', 'Přihlásit se')}
               </button>
             </li>
           )}
         </ul>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
           <div id="nav-auth-container" style={{ display: 'flex', alignItems: 'center', gap: '5px', marginRight: '5px' }}>
             {currentUser ? (
               <>
@@ -135,16 +135,16 @@ export function Navbar() {
             <i className="fa-solid fa-user-lock"></i>
           </Link>
 
-          <div className="lang-switcher" id="lang-switcher">
-            <button className={`lang-btn ${currentLang === 'cs' ? 'active' : ''}`} onClick={() => setLanguage('cs')} title="Čeština">CZ</button>
-            <button className={`lang-btn ${currentLang === 'en' ? 'active' : ''}`} onClick={() => setLanguage('en')} title="English">EN</button>
+          <div className="lang-switcher" id="lang-switcher" role="group" aria-label="Volba jazyka">
+            <button className={`lang-btn ${currentLang === 'cs' ? 'active' : ''}`} aria-pressed={currentLang === 'cs'} onClick={() => setLanguage('cs')} title="Čeština">CZ</button>
+            <button className={`lang-btn ${currentLang === 'en' ? 'active' : ''}`} aria-pressed={currentLang === 'en'} onClick={() => setLanguage('en')} title="English">EN</button>
           </div>
 
           <button id="theme-toggle" className="theme-toggle" onClick={toggleTheme} aria-label="Přepnout motiv">
             <i className={theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
           </button>
 
-          <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Mobilní menu">
+          <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Otevřít menu" aria-expanded={mobileMenuOpen}>
             <i className={mobileMenuOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'}></i>
           </button>
         </div>

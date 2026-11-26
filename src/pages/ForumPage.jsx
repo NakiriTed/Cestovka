@@ -27,6 +27,7 @@ export function ForumPage() {
       id: Date.now(),
       title: newTitle,
       author: authorName,
+      authorUid: currentUser?.uid || null,
       category: newCategory,
       date: new Date().toLocaleDateString('cs-CZ'),
       content: newContent,

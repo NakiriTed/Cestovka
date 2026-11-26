@@ -9,14 +9,20 @@ import { TripReviews } from '../components/TripReviews';
 
 export function PlannerPage() {
   const { t } = useLanguage();
-  const { itineraries, addItinerary, resolveImage, getMediaKey } = useData();
+  const { itineraries, addItinerary, deleteItinerary, resolveImage, getMediaKey } = useData();
   const location = useLocation();
   const { theme } = useTheme();
   const { currentUser } = useAuth();
 
   const [filter, setFilter] = useState('vše');
   const [sortBy, setSortBy] = useState('default');
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('favorites') || '[]');
+    } catch {
+      return [];
+    }
+  });
   const [compareList, setCompareList] = useState([]);
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [activeDetailPlan, setActiveDetailPlan] = useState(null);
@@ -34,6 +40,7 @@ export function PlannerPage() {
     { day: 'Den 8-10', title: 'Moderní čtvrti, nákupy a návrat', desc: 'Rozloučení s Asií, nákupy suvenýrů a odlet domů.' }
   ]);
   const [isGeneratingAiPlan, setIsGeneratingAiPlan] = useState(false);
+  const [aiPlanError, setAiPlanError] = useState('');
 
   useEffect(() => {
     const handleReset = () => {
@@ -76,9 +83,16 @@ export function PlannerPage() {
   // Booking Wizard Modal State
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
-  // Close lightbox on ESC
+  // Close modals and lightbox on ESC
   useEffect(() => {
-    const handleKey = (e) => { if (e.key === 'Escape') setLightboxPhoto(null); };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        setLightboxPhoto(null);
+        setIsBookingOpen(false);
+        setIsCustomBuilderOpen(false);
+        setIsCompareModalOpen(false);
+      }
+    };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
@@ -245,9 +259,11 @@ export function PlannerPage() {
 
   const toggleFavorite = (id, e) => {
     e.stopPropagation();
-    setFavorites(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
+    setFavorites(prev => {
+      const next = prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id];
+      try { localStorage.setItem('favorites', JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   const toggleCompare = (id, e) => {
@@ -265,8 +281,14 @@ export function PlannerPage() {
 
   const handleGenerateAiDays = async () => {
     setIsGeneratingAiPlan(true);
+    setAiPlanError('');
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+    if (!apiKey) {
+      setAiPlanError('AI plánovač momentálně není dostupný (chybí API klíč v prostředí). Můžete pokračovat s výchozím programem.');
+      setIsGeneratingAiPlan(false);
+      return;
+    }
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
       const prompt = `Sestav cestovní itinerář den po dni pro zemi "${customCountry}", délku "${customDuration}", styl "${customTag}" a města: ${customCities.join(', ')}.
 Vrať POUZE čisté JSON pole objektů (4 až 6 bloků dnů) v češtině bez markdownu ve formátu:
 [{"day": "Den 1-2", "title": "Název bloku", "desc": "Stručný popis aktivit a památek"}]`;
@@ -276,6 +298,7 @@ Vrať POUZE čisté JSON pole objektů (4 až 6 bloků dnů) v češtině bez ma
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] })
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const arrMatch = raw.match(/\[[\s\S]*\]/);
@@ -283,10 +306,13 @@ Vrať POUZE čisté JSON pole objektů (4 až 6 bloků dnů) v češtině bez ma
         const parsed = JSON.parse(arrMatch[0]);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setCustomDays(parsed);
+          return;
         }
       }
+      setAiPlanError('Odpověď AI se nepodařilo zpracovat. Zkuste to prosím znovu.');
     } catch (err) {
       console.error('AI itinerary generation error:', err);
+      setAiPlanError('AI služba je momentálně nedostupná. Zkontrolujte připojení nebo uložte výchozí program.');
     } finally {
       setIsGeneratingAiPlan(false);
     }
@@ -314,6 +340,9 @@ Vrať POUZE čisté JSON pole objektů (4 až 6 bloků dnů) v češtině bez ma
       cities: customCities,
       photos: [resolvedCover],
       days: customDays,
+      isCustom: true,
+      ownerId: currentUser?.uid || null,
+      createdAt: new Date().toISOString()
     };
 
     try {
@@ -724,7 +753,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <i className="fa-solid fa-sort-amount-down" style={{ color: 'var(--accent-color)' }}></i>
-                <select className="sort-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <select aria-label="Řazení zájezdů" className="sort-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                   <option value="default">Doporučené</option>
                   <option value="price-asc">Nejlevnější</option>
                   <option value="price-desc">Nejdražší</option>
@@ -740,9 +769,12 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                 return (
                   <div 
                     key={item.id} 
+                    role="button"
+                    tabIndex={0}
                     className="glass" 
                     style={{ borderRadius: '20px', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.3s' }}
                     onClick={() => setActiveDetailPlan(item)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveDetailPlan(item); } }}
                   >
                     <div style={{ position: 'relative', height: '200px', background: '#222', overflow: 'hidden' }}>
                       <img src={item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -755,6 +787,9 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                       )}
 
                       <button 
+                        type="button"
+                        aria-label={favorites.includes(item.id) ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}
+                        aria-pressed={favorites.includes(item.id)}
                         onClick={(e) => toggleFavorite(item.id, e)} 
                         style={{ position: 'absolute', top: 15, right: 15, zIndex: 2, background: 'rgba(0,0,0,0.5)', border: 'none', color: favorites.includes(item.id) ? '#e74c3c' : '#fff', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer' }}
                       >
@@ -853,9 +888,9 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
       {/* Booking & Payment Wizard Modal */}
       {isBookingOpen && (
-        <div className="booking-modal active" onClick={() => setIsBookingOpen(false)}>
+        <div className="booking-modal active" role="dialog" aria-modal="true" aria-label="Rezervace a platba zájezdu" onClick={() => setIsBookingOpen(false)}>
           <div className="glass modal-content" style={{ maxWidth: '620px' }} onClick={e => e.stopPropagation()}>
-            <button className="close-modal" onClick={() => setIsBookingOpen(false)}><i className="fa-solid fa-xmark"></i></button>
+            <button type="button" aria-label="Zavřít" className="close-modal" onClick={() => setIsBookingOpen(false)}><i className="fa-solid fa-xmark"></i></button>
             <h3 style={{ marginBottom: '1rem', color: 'var(--accent-color)' }}>Rezervace & Platba zájezdu</h3>
 
             <div className="step-indicator" style={{ marginBottom: '1.5rem' }}>
@@ -1234,9 +1269,9 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
       {/* Custom Itinerary Builder Modal */}
       {isCustomBuilderOpen && (
-        <div className="booking-modal active" onClick={() => setIsCustomBuilderOpen(false)}>
+        <div className="booking-modal active" role="dialog" aria-modal="true" aria-label="Sestavit vlastní itinerář" onClick={() => setIsCustomBuilderOpen(false)}>
           <div className="glass modal-content" style={{ maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-            <button className="close-modal" onClick={() => setIsCustomBuilderOpen(false)}><i className="fa-solid fa-xmark"></i></button>
+            <button type="button" aria-label="Zavřít" className="close-modal" onClick={() => setIsCustomBuilderOpen(false)}><i className="fa-solid fa-xmark"></i></button>
             <h3 style={{ marginBottom: '0.4rem', color: 'var(--accent-color)' }}>
               <i className="fa-solid fa-wand-magic-sparkles"></i> Sestavit vlastní itinerář
             </h3>
@@ -1323,6 +1358,12 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                   {isGeneratingAiPlan ? <><i className="fa-solid fa-spinner fa-spin"></i> Generuji přes Gemini AI...</> : <><i className="fa-solid fa-robot"></i> Vygenerovat program pomocí AI</>}
                 </button>
               </div>
+
+              {aiPlanError && (
+                <div role="alert" style={{ marginBottom: '1rem', padding: '0.8rem', borderRadius: '10px', background: 'rgba(231, 76, 60, 0.14)', border: '1px solid #e74c3c', color: '#ff8a80', fontSize: '0.85rem' }}>
+                  <i className="fa-solid fa-triangle-exclamation"></i> {aiPlanError}
+                </div>
+              )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '1.5rem' }}>
                 {customDays.map((d, idx) => (
