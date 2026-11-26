@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 export function HomePage() {
-  const { t } = useLanguage();
+  const { t, currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
 
   useEffect(() => {
     // Falling leaves effect for Home Page
@@ -60,9 +61,9 @@ export function HomePage() {
               </svg>
             </div>
             
-            <h2 style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--accent-color)', marginBottom: '1.2rem', textShadow: '0 2px 10px rgba(239,35,60,0.3)' }}>
-              Pojďme společně objevovat chutě Asie
-            </h2>
+            <h1 style={{ fontSize: '1.9rem', fontWeight: 700, color: 'var(--accent-color)', marginBottom: '1.2rem', textShadow: '0 2px 10px rgba(239,35,60,0.3)' }}>
+              {isEn ? 'Discover the Soul & Flavors of East Asia' : 'Pojďme společně objevovat chutě Asie'}
+            </h1>
 
             <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', maxWidth: '750px', margin: '0 auto 2rem', lineHeight: 1.6 }}>
               {t('home.hero.desc', 'Od stínů hory Fuji a odkazů samurajů až po křehkou krásu kvetoucích sakur. Zažijte cestu, na kterou nikdy nezapomenete.')}
@@ -73,10 +74,10 @@ export function HomePage() {
                 <i className="fa-solid fa-route"></i> {t('home.hero.cta', 'Začít plánovat cestu')}
               </Link>
               <Link to="/japan" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', textDecoration: 'none', border: '1px solid var(--glass-border)', padding: '0.8rem 1.5rem' }}>
-                🇯🇵 Japonsko
+                🇯🇵 {isEn ? 'Japan' : 'Japonsko'}
               </Link>
               <Link to="/korea" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', textDecoration: 'none', border: '1px solid var(--glass-border)', padding: '0.8rem 1.5rem' }}>
-                🇰🇷 Jižní Korea
+                🇰🇷 {isEn ? 'South Korea' : 'Jižní Korea'}
               </Link>
             </div>
 
@@ -111,7 +112,7 @@ export function HomePage() {
 
               <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 <i className="fa-solid fa-volume-high" style={{ color: 'var(--accent-color)', marginRight: '6px' }}></i>
-                Video s přehrávačem YouTube — zvuk si můžete zapnout i vypnout přímo v přehrávači.
+                {isEn ? 'YouTube video player — you can toggle sound directly inside the player.' : 'Video s přehrávačem YouTube — zvuk si můžete zapnout i vypnout přímo v přehrávači.'}
               </p>
             </div>
           </div>
@@ -123,18 +124,18 @@ export function HomePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
           <div className="glass" style={{ padding: '2rem', borderRadius: '20px' }}>
             <i className="fa-solid fa-utensils" style={{ fontSize: '2.5rem', color: 'var(--accent-color)', marginBottom: '1rem' }}></i>
-            <h3 style={{ marginBottom: '0.5rem' }}>Autentické chutě Asie</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Ochutnejte pravý suši na rybím trhu Tsukiji, vyhlášený tokijský ramen nebo pikantní korejské BBQ v Soulu.</p>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{isEn ? 'Authentic Asian Flavors' : 'Autentické chutě Asie'}</h2>
+            <p style={{ color: 'var(--text-muted)' }}>{isEn ? 'Taste fresh sushi at Tsukiji market, famous Tokyo ramen, or sizzling Korean BBQ in Seoul.' : 'Ochutnejte pravé suši na rybím trhu Tsukiji, vyhlášený tokijský ramen nebo pikantní korejské BBQ v Soulu.'}</p>
           </div>
           <div className="glass" style={{ padding: '2rem', borderRadius: '20px' }}>
             <i className="fa-solid fa-map-location-dot" style={{ fontSize: '2.5rem', color: '#3498db', marginBottom: '1rem' }}></i>
-            <h3 style={{ marginBottom: '0.5rem' }}>Malé cestovatelské skupiny</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Cestujeme v komorní skupině 8–12 osob. Žádné obří autobusy, ale osobní přístup a rodinná atmosféra.</p>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{isEn ? 'Small Travel Groups' : 'Malé cestovatelské skupiny'}</h2>
+            <p style={{ color: 'var(--text-muted)' }}>{isEn ? 'We travel in intimate groups of 8–12 people. No giant buses—just a personal approach and friendly atmosphere.' : 'Cestujeme v komorní skupině 8–12 osob. Žádné obří autobusy, ale osobní přístup a rodinná atmosféra.'}</p>
           </div>
           <div className="glass" style={{ padding: '2rem', borderRadius: '20px' }}>
             <i className="fa-solid fa-language" style={{ fontSize: '2.5rem', color: '#6c5ce7', marginBottom: '1rem' }}></i>
-            <h3 style={{ marginBottom: '0.5rem' }}>Jazyková průprava</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Naučte se základní fráze v japonštině i korejštině s našimi 3D výukovými kartičkami a AI asistentem zdarma.</p>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{isEn ? 'Language Preparation' : 'Jazyková průprava'}</h2>
+            <p style={{ color: 'var(--text-muted)' }}>{isEn ? 'Learn essential Japanese and Korean phrases with our interactive 3D flashcards and free AI tutor.' : 'Naučte se základní fráze v japonštině i korejštině s našimi 3D výukovými kartičkami a AI asistentem zdarma.'}</p>
           </div>
         </div>
       </section>

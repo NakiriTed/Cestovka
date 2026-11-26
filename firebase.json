@@ -1,5 +1,6 @@
 {
   "firestore": {
+    "database": "cestovka",
     "rules": "firestore.rules"
   },
   "storage": {

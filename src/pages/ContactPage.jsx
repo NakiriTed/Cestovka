@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export function ContactPage() {
+  const { currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
   const [sent, setSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
   
@@ -44,10 +47,12 @@ export function ContactPage() {
     <main style={{ maxWidth: '950px', margin: '0 auto', padding: '6rem 2rem 3rem' }}>
       <div className="glass" style={{ padding: '3rem', borderRadius: '24px' }}>
         <h1 style={{ marginBottom: '0.5rem' }}>
-          <i className="fa-solid fa-address-card" style={{ color: 'var(--accent-color)' }}></i> Kontaktujte nás
+          <i className="fa-solid fa-address-card" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Contact Us' : 'Kontaktujte nás'}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '2.5rem' }}>
-          Máte dotaz k zájezdům, vytvoření itineráře na míru nebo se chcete na cokoliv zeptat? Napište nám e-mail nebo přímo na sociálních sítích!
+          {isEn
+            ? 'Have a question about our trips, custom itineraries, or anything else? Send us an e-mail or reach out on social media!'
+            : 'Máte dotaz k zájezdům, vytvoření itineráře na míru nebo se chcete na cokoliv zeptat? Napište nám e-mail nebo přímo na sociálních sítích!'}
         </p>
 
         {/* Social Media Contact Cards */}
@@ -107,38 +112,38 @@ export function ContactPage() {
 
         {/* Contact Form */}
         <h2 style={{ fontSize: '1.6rem', marginBottom: '1.5rem' }}>
-          <i className="fa-solid fa-paper-plane" style={{ color: 'var(--accent-color)' }}></i> Nebo nám pošlete zprávu formulářem
+          <i className="fa-solid fa-paper-plane" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Or send us a message via the form' : 'Nebo nám pošlete zprávu formulářem'}
         </h2>
 
         {sent ? (
           <div style={{ color: '#2ecc71', textAlign: 'center', padding: '3rem', background: 'rgba(46, 204, 113, 0.1)', borderRadius: '16px', border: '1px solid rgba(46, 204, 113, 0.3)' }}>
             <i className="fa-solid fa-circle-check fa-4x" style={{ marginBottom: '1rem' }}></i>
-            <h2>Děkujeme za zprávu!</h2>
-            <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Zprávu jsme přijali a ozveme se vám do 24 hodin.</p>
+            <h2>{isEn ? 'Thank you for your message!' : 'Děkujeme za zprávu!'}</h2>
+            <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>{isEn ? 'We have received your message and will reply within 24 hours.' : 'Zprávu jsme přijali a ozveme se vám do 24 hodin.'}</p>
           </div>
         ) : (
           <form onSubmit={handleFormSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
               <div className="form-group">
-                <label>Vaše Jméno a Příjmení</label>
-                <input type="text" required placeholder="Jan Novák" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                <label htmlFor="contact-name">{isEn ? 'Full Name' : 'Jméno a příjmení'}</label>
+                <input id="contact-name" autoComplete="name" type="text" required placeholder="Jan Novák" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
               </div>
               <div className="form-group">
-                <label>Váš E-mail</label>
-                <input type="email" required placeholder="jan@email.cz" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                <label htmlFor="contact-email">{isEn ? 'E-mail' : 'E-mail'}</label>
+                <input id="contact-email" autoComplete="email" type="email" required placeholder="jan@email.cz" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
               </div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-              <label>Text zprávy</label>
-              <textarea rows="5" required placeholder="Napište nám, co vás zajímá..." value={message} onChange={(e) => setMessage(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }}></textarea>
+              <label htmlFor="contact-message">{isEn ? 'Message' : 'Text zprávy'}</label>
+              <textarea id="contact-message" rows="5" required placeholder={isEn ? 'Write your question...' : 'Napište nám, co vás zajímá...'} value={message} onChange={(e) => setMessage(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }}></textarea>
             </div>
 
             <button type="submit" className="btn btn-primary" disabled={isSending} style={{ width: '100%', padding: '1rem', fontSize: '1.05rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
               {isSending ? (
-                <><i className="fa-solid fa-spinner fa-spin"></i> Odesílám...</>
+                <><i className="fa-solid fa-spinner fa-spin"></i> {isEn ? 'Sending...' : 'Odesílám...'}</>
               ) : (
-                <><i className="fa-solid fa-paper-plane"></i> Odeslat dotaz</>
+                <><i className="fa-solid fa-paper-plane"></i> {isEn ? 'Send Message' : 'Odeslat zprávu'}</>
               )}
             </button>
           </form>

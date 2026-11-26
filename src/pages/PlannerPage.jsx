@@ -723,13 +723,14 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
       ) : (
         <>
           <div className="glass planner-header" style={{ textAlign: 'center', padding: '2rem', borderRadius: '20px', marginBottom: '2rem' }}>
-            <h2>{t('planner.header.title', 'Vyberte si váš vysněný plán')}</h2>
+            <h1 style={{ fontSize: '2.4rem' }}>{t('planner.header.title', 'Vyberte si váš vysněný plán')}</h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.2rem' }}>
               {t('planner.header.desc', 'Připravili jsme pro vás detailní itineráře. Klikněte na zájezd pro zobrazení fotek míst a trasy na mapě.')}
             </p>
             <button
               type="button"
               className="btn btn-primary"
+              data-testid="custom-builder-open"
               onClick={() => setIsCustomBuilderOpen(true)}
               style={{ padding: '0.75rem 1.6rem', fontSize: '0.95rem' }}
             >

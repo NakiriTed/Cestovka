@@ -14,9 +14,6 @@ export function LanguageProvider({ children }) {
     const stored = localStorage.getItem('lang');
     if (stored && SUPPORTED_LANGS.includes(stored)) return stored;
 
-    const browserLang = (navigator.language || '').split('-')[0];
-    if (SUPPORTED_LANGS.includes(browserLang)) return browserLang;
-
     return DEFAULT_LANG;
   });
 
