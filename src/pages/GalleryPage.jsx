@@ -5,9 +5,33 @@ import { useLanguage } from '../context/LanguageContext';
 import { compressImageToDataUrl } from '../firebase';
 
 export function GalleryPage() {
-  const { t } = useLanguage();
+  const { t, currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
   const { currentUser } = useAuth();
   const { galleryItems, addGalleryItem } = useData();
+
+  const EN_GALLERY_TITLES = {
+    'Svatyně Fushimi Inari': 'Fushimi Inari Shrine',
+    'Tokyo Tower v noci': 'Tokyo Tower at Night',
+    'Tradiční palác Gyeongbokgung': 'Gyeongbokgung Royal Palace',
+    'Bambusový háj Arashiyama': 'Arashiyama Bamboo Grove',
+    'Gurmánská čtvrť Dotonbori': 'Dotonbori Food District',
+    'Hora Fudži a Pagoda Chureito': 'Mt. Fuji & Chureito Pagoda',
+    'Tedův Východní Svět - Cestování po Asii': "Ted's Eastern World - Traveling Across Asia"
+  };
+
+  const localizePlace = (place) => {
+    if (!place || !isEn) return place;
+    return place
+      .replace('Kjótó, Japonsko', 'Kyoto, Japan')
+      .replace('Tokio, Japonsko', 'Tokyo, Japan')
+      .replace('Soul, Jižní Korea', 'Seoul, South Korea')
+      .replace('Ósaka, Japonsko', 'Osaka, Japan')
+      .replace('Kawaguchiko, Japonsko', 'Kawaguchiko, Japan')
+      .replace('Japonsko & Korea', 'Japan & South Korea')
+      .replace('Japonsko', 'Japan')
+      .replace('Jižní Korea', 'South Korea');
+  };
 
   const [activeItem, setActiveItem] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -134,11 +158,11 @@ export function GalleryPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
           {/* Country Filter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}><i className="fa-solid fa-globe"></i> Země:</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}><i className="fa-solid fa-globe"></i> {isEn ? 'Country:' : 'Země:'}</span>
             {[
-              { id: 'vše', label: 'Všechny země' },
-              { id: 'Japonsko', label: '🇯🇵 Japonsko' },
-              { id: 'Korea', label: '🇰🇷 Jižní Korea' }
+              { id: 'vše', label: isEn ? 'All Countries' : 'Všechny země' },
+              { id: 'Japonsko', label: isEn ? '🇯🇵 Japan' : '🇯🇵 Japonsko' },
+              { id: 'Korea', label: isEn ? '🇰🇷 South Korea' : '🇰🇷 Jižní Korea' }
             ].map(c => (
               <button 
                 key={c.id} 
@@ -153,7 +177,7 @@ export function GalleryPage() {
 
           {/* City Filter */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}><i className="fa-solid fa-city"></i> Město:</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}><i className="fa-solid fa-city"></i> {isEn ? 'City:' : 'Město:'}</span>
             {availableCities.map(city => (
               <button 
                 key={city} 
@@ -161,7 +185,7 @@ export function GalleryPage() {
                 onClick={() => setCityFilter(city)}
                 style={{ padding: '4px 12px', fontSize: '0.8rem', textTransform: 'capitalize' }}
               >
-                {city === 'vše' ? 'Všechna města' : city}
+                {city === 'vše' ? (isEn ? 'All Cities' : 'Všechna města') : city}
               </button>
             ))}
           </div>
@@ -173,7 +197,7 @@ export function GalleryPage() {
               className="btn btn-primary" 
               onClick={() => setShowAddForm(prev => !prev)}
             >
-              <i className="fa-solid fa-plus"></i> {showAddForm ? 'Zavřít formulář' : 'Přidat fotku / video (z počítače nebo URL)'}
+              <i className="fa-solid fa-plus"></i> {showAddForm ? (isEn ? 'Close Form' : 'Zavřít formulář') : (isEn ? 'Add Photo / Video (from PC or URL)' : 'Přidat fotku / video (z počítače nebo URL)')}
             </button>
           </div>
         )}
@@ -181,7 +205,7 @@ export function GalleryPage() {
 
       {showAddForm && currentUser && (
         <div className="glass" style={{ padding: '2rem', borderRadius: '20px', marginBottom: '2.5rem' }}>
-          <h3><i className="fa-solid fa-upload" style={{ color: 'var(--accent-color)' }}></i> Nahrát novou fotku / video</h3>
+          <h3><i className="fa-solid fa-upload" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Upload New Photo / Video' : 'Nahrát novou fotku / video'}</h3>
           
           <div style={{ display: 'flex', gap: '10px', margin: '1rem 0' }}>
             <button 
@@ -189,50 +213,51 @@ export function GalleryPage() {
               className={`mode-tab-btn ${uploadMode === 'file' ? 'active' : ''}`} 
               onClick={() => setUploadMode('file')}
             >
-              <i className="fa-solid fa-laptop"></i> Nahrát z počítače
+              <i className="fa-solid fa-laptop"></i> {isEn ? 'Upload from Computer' : 'Nahrát z počítače'}
             </button>
             <button 
               type="button"
               className={`mode-tab-btn ${uploadMode === 'url' ? 'active' : ''}`} 
               onClick={() => setUploadMode('url')}
             >
-              <i className="fa-solid fa-link"></i> Vložit URL adresu
+              <i className="fa-solid fa-link"></i> {isEn ? 'Paste URL' : 'Vložit URL adresu'}
             </button>
           </div>
 
           <form onSubmit={handleAddPhoto}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
               <div className="form-group">
-                <label>Typ</label>
-                <select value={newType} onChange={e => setNewType(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: 'var(--text-main)' }}>
-                  <option value="photo">Fotografie</option>
-                  <option value="video">Video (YouTube / MP4)</option>
+                <label htmlFor="gal-type">{isEn ? 'Type' : 'Typ'}</label>
+                <select id="gal-type" value={newType} onChange={e => setNewType(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: 'var(--text-main)' }}>
+                  <option value="photo">{isEn ? 'Photo' : 'Fotografie'}</option>
+                  <option value="video">{isEn ? 'Video (YouTube / MP4)' : 'Video (YouTube / MP4)'}</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label>Země</label>
-                <select value={newCountry} onChange={e => setNewCountry(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: 'var(--text-main)' }}>
-                  <option value="Japonsko">Japonsko 🇯🇵</option>
-                  <option value="Jižní Korea">Jižní Korea 🇰🇷</option>
+                <label htmlFor="gal-country">{isEn ? 'Country' : 'Země'}</label>
+                <select id="gal-country" value={newCountry} onChange={e => setNewCountry(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: 'var(--text-main)' }}>
+                  <option value="Japonsko">{isEn ? 'Japan 🇯🇵' : 'Japonsko 🇯🇵'}</option>
+                  <option value="Jižní Korea">{isEn ? 'South Korea 🇰🇷' : 'Jižní Korea 🇰🇷'}</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label>Město</label>
-                <input type="text" placeholder="Tokyo, Kyoto, Osaka, Soul..." value={newCity} onChange={e => setNewCity(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                <label htmlFor="gal-city">{isEn ? 'City' : 'Město'}</label>
+                <input id="gal-city" type="text" placeholder="Tokyo, Kyoto, Osaka, Soul..." value={newCity} onChange={e => setNewCity(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
               </div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '1rem' }}>
-              <label>Název fotky/videa</label>
-              <input type="text" required placeholder="Např. Večerní Šindžuku" value={newTitle} onChange={e => setNewTitle(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+              <label htmlFor="gal-title">{isEn ? 'Photo / Video Title' : 'Název fotky/videa'}</label>
+              <input id="gal-title" type="text" required placeholder={isEn ? 'e.g. Evening in Shinjuku' : 'Např. Večerní Šindžuku'} value={newTitle} onChange={e => setNewTitle(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
             </div>
 
             {uploadMode === 'file' ? (
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label>Vyberte soubor z počítače (Obrázek nebo Video)</label>
+                <label htmlFor="gal-file">{isEn ? 'Select file from computer (Image or Video)' : 'Vyberte soubor z počítače (Obrázek nebo Video)'}</label>
                 <input 
+                  id="gal-file"
                   type="file" 
                   accept="image/*,video/*"
                   onChange={handleFileUpload} 
@@ -240,18 +265,18 @@ export function GalleryPage() {
                 />
                 {newUrl && newUrl.startsWith('data:') && (
                   <p style={{ color: '#2ecc71', fontSize: '0.85rem', marginTop: '0.4rem' }}>
-                    <i className="fa-solid fa-circle-check"></i> Soubor byl načten a připraven k uložení!
+                    <i className="fa-solid fa-circle-check"></i> {isEn ? 'File loaded and ready to save!' : 'Soubor byl načten a připraven k uložení!'}
                   </p>
                 )}
               </div>
             ) : (
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label>URL adresa (obrázku nebo YouTube embed)</label>
-                <input type="url" required placeholder="https://..." value={newUrl} onChange={e => setNewUrl(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                <label htmlFor="gal-url">{isEn ? 'URL address (image or YouTube embed)' : 'URL adresa (obrázku nebo YouTube embed)'}</label>
+                <input id="gal-url" type="url" required placeholder="https://..." value={newUrl} onChange={e => setNewUrl(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary"><i className="fa-solid fa-cloud-arrow-up"></i> Uložit do galerie</button>
+            <button type="submit" className="btn btn-primary"><i className="fa-solid fa-cloud-arrow-up"></i> {isEn ? 'Save to Gallery' : 'Uložit do galerie'}</button>
           </form>
         </div>
       )}
@@ -260,17 +285,20 @@ export function GalleryPage() {
       {filteredItems.length === 0 ? (
         <div className="glass" style={{ padding: '3rem', textAlign: 'center', borderRadius: '20px' }}>
           <i className="fa-solid fa-images fa-3x" style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}></i>
-          <h3>Žádné fotky neodpovídají zadanému filtru</h3>
-          <p style={{ color: 'var(--text-muted)' }}>Zkuste změnit výběr země nebo města.</p>
+          <h3>{isEn ? 'No photos match the selected filter' : 'Žádné fotky neodpovídají zadanému filtru'}</h3>
+          <p style={{ color: 'var(--text-muted)' }}>{isEn ? 'Try changing the country or city filter.' : 'Zkuste změnit výběr země nebo města.'}</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-          {filteredItems.map((p) => (
+          {filteredItems.map((p) => {
+            const displayTitle = (isEn && EN_GALLERY_TITLES[p.title]) ? EN_GALLERY_TITLES[p.title] : p.title;
+            const displayPlace = localizePlace(p.place || p.city);
+            return (
             <div 
               key={p.id} 
               className="glass" 
               style={{ borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.3s' }}
-              onClick={() => setActiveItem(p)}
+              onClick={() => setActiveItem({ ...p, title: displayTitle, place: displayPlace })}
             >
               <div style={{ height: '230px', background: '#111', overflow: 'hidden', position: 'relative' }}>
                 {p.type === 'video' ? (
@@ -279,7 +307,7 @@ export function GalleryPage() {
                   ) : (
                     <iframe 
                       src={sanitizeVideoEmbedUrl(p.src)} 
-                      title={p.title}
+                      title={displayTitle}
                       sandbox="allow-scripts allow-same-origin allow-presentation"
                       style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }}
                     ></iframe>
@@ -287,20 +315,21 @@ export function GalleryPage() {
                 ) : (
                   <img 
                     src={p.src} 
-                    alt={p.title}
+                    alt={displayTitle}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 )}
                 <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.6)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', color: '#fff' }}>
-                  {p.type === 'video' ? '🎬 Video' : '📷 Fotka'}
+                  {p.type === 'video' ? (isEn ? '🎬 Video' : '🎬 Video') : (isEn ? '📷 Photo' : '📷 Fotka')}
                 </div>
               </div>
               <div style={{ padding: '1.2rem' }}>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.3rem' }}>{p.title}</h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}><i className="fa-solid fa-location-dot"></i> {p.place || p.city}</p>
+                <h2 style={{ fontSize: '1.2rem', marginBottom: '0.3rem' }}>{displayTitle}</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}><i className="fa-solid fa-location-dot"></i> {displayPlace}</p>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

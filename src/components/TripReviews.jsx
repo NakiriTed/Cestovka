@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { db, collection, query, where, getDocs, addDoc } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export function TripReviews({ planId }) {
   const { currentUser, userProfile } = useAuth();
+  const { currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -66,42 +69,43 @@ export function TripReviews({ planId }) {
 
   return (
     <div style={{ marginTop: '3rem' }}>
-      <h2><i className="fa-solid fa-star" style={{ color: 'var(--accent-color)' }}></i> Recenze a zkušenosti</h2>
+      <h2><i className="fa-solid fa-star" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Reviews & Experiences' : 'Recenze a zkušenosti'}</h2>
       
       {/* New Review Form */}
       {currentUser ? (
         <div className="glass" style={{ padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem' }}>
-          <h4 style={{ marginBottom: '1rem' }}>Přidat vlastní hodnocení</h4>
+          <h3 style={{ fontSize: '1.15rem', marginBottom: '1rem' }}>{isEn ? 'Add Your Review' : 'Přidat vlastní hodnocení'}</h3>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Hodnocení (1-5)</label>
-              <select value={rating} onChange={e => setRating(Number(e.target.value))} style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.5)', color: '#fff', width: '100px' }}>
-                <option value="5">5 hvězdiček</option>
-                <option value="4">4 hvězdičky</option>
-                <option value="3">3 hvězdičky</option>
-                <option value="2">2 hvězdičky</option>
-                <option value="1">1 hvězdička</option>
+              <label htmlFor="review-rating" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{isEn ? 'Rating (1–5)' : 'Hodnocení (1–5)'}</label>
+              <select id="review-rating" value={rating} onChange={e => setRating(Number(e.target.value))} style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.5)', color: '#fff', width: '130px' }}>
+                <option value="5">{isEn ? '5 stars' : '5 hvězdiček'}</option>
+                <option value="4">{isEn ? '4 stars' : '4 hvězdičky'}</option>
+                <option value="3">{isEn ? '3 stars' : '3 hvězdičky'}</option>
+                <option value="2">{isEn ? '2 stars' : '2 hvězdičky'}</option>
+                <option value="1">{isEn ? '1 star' : '1 hvězdička'}</option>
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Komentář</label>
+              <label htmlFor="review-comment" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{isEn ? 'Comment' : 'Komentář'}</label>
               <textarea 
+                id="review-comment"
                 required
                 rows="3" 
                 value={comment} 
                 onChange={e => setComment(e.target.value)} 
-                placeholder="Jak se vám zájezd líbil? Napište ostatním vaše zkušenosti..."
+                placeholder={isEn ? 'How did you enjoy the trip? Share your experience with others...' : 'Jak se vám zájezd líbil? Napište ostatním vaše zkušenosti...'}
                 style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }}
               />
             </div>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting} style={{ alignSelf: 'flex-start' }}>
-              {isSubmitting ? 'Odesílám...' : 'Odeslat recenzi'}
+              {isSubmitting ? (isEn ? 'Submitting...' : 'Odesílám...') : (isEn ? 'Submit Review' : 'Odeslat recenzi')}
             </button>
           </form>
         </div>
       ) : (
         <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Pro napsání recenze se musíte nejprve přihlásit.
+          {isEn ? 'Please sign in to write a review.' : 'Pro napsání recenze se musíte nejprve přihlásit.'}
         </div>
       )}
 
@@ -120,7 +124,7 @@ export function TripReviews({ planId }) {
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.3rem' }}>
                   <strong style={{ fontSize: '1.1rem' }}>{rev.userName}</strong>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{new Date(rev.createdAt).toLocaleDateString('cs-CZ')}</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{new Date(rev.createdAt).toLocaleDateString(isEn ? 'en-US' : 'cs-CZ')}</span>
                 </div>
                 <div style={{ marginBottom: '0.8rem', fontSize: '0.9rem' }}>
                   {renderStars(rev.rating)}
@@ -132,7 +136,7 @@ export function TripReviews({ planId }) {
         </div>
       ) : (
         <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-          Zatím tu nejsou žádné recenze. Buďte první!
+          {isEn ? 'No reviews yet. Be the first to write one!' : 'Zatím tu nejsou žádné recenze. Buďte první!'}
         </div>
       )}
     </div>

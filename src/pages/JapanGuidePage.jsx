@@ -3,19 +3,26 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 export function JapanGuidePage() {
-  const { t } = useLanguage();
+  const { t, currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
   const [openFaq, setOpenFaq] = useState(null);
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const faqs = [
+  const faqs = isEn ? [
+    { q: 'Do I need a visa to travel to Japan?', a: 'EU, CZ, and SK citizens do not need a visa for tourist stays up to 90 days. A valid passport is sufficient.' },
+    { q: 'How do payments work in Japan? Are cards accepted?', a: 'The official currency is the Japanese Yen (JPY). Cards are accepted in most stores and hotels, though having cash from 7-Eleven ATMs is recommended for smaller shrines and ramen stalls.' },
+    { q: 'Is Japan safe?', a: 'Japan is one of the safest countries in the world with minimal crime, even late at night.' },
+    { q: 'How to get mobile internet while traveling?', a: 'The best option is buying an eSIM or renting a Pocket Wi-Fi router at Haneda or Narita airport.' },
+    { q: 'What are the essential etiquette rules?', a: 'Do not talk on the phone on trains, never leave tips (it is considered rude), and take off your shoes when entering traditional accommodations.' }
+  ] : [
     { q: 'Potřebuji pro cestu do Japonska vízum?', a: 'Občané ČR a SR nepotřebují pro turistický pobyt do 90 dnů žádné vízum. Stačí vám platný cestovní pas (platnost min. po dobu pobytu).' },
-    { q: 'Jak se v Japonsku platí? Berou všude karty?', a: 'Oficiální měnou je Japonský jen (JPY). Japonsko je stále poměrně hotovostní společnost, i když na větších místech karty berou. Doporučujeme mít u sebe vždy dostatek hotovosti (vybrat lze v 7-Eleven bankomatech).' },
+    { q: 'Jak se v Japonsku platí? Berou všude karty?', a: 'Oficiální měnou je japonský jen (JPY). Japonsko je stále poměrně hotovostní společnost, i když na větších místech karty berou. Doporučujeme mít u sebe vždy dostatek hotovosti (vybrat lze v 7-Eleven bankomatech).' },
     { q: 'Je v Japonsku bezpečno?', a: 'Japonsko patří mezi nejbezpečnější země světa s minimální kriminalitou. Můžete se bez obav pohybovat po nocích v jakékoliv čtvrti.' },
     { q: 'Jak je to s internetem na cestách?', a: 'Nejlepší volbou je zakoupení e-SIM karty nebo pronájem Pocket Wi-Fi routeru přímo na letišti (Haneda/Narita).' },
-    { q: 'Jaké jsou základní etiketní pravidla?', a: 'V MHD se netelefonuje a mluví potichu. Spropitné se nikde nedává (bude považováno za chybu nebo urážku). V hotelu či ryokanu se přezouvá do papučí.' }
+    { q: 'Jaká jsou základní pravidla etikety?', a: 'V MHD se netelefonuje a mluví potichu. Spropitné se nikde nedává (bude považováno za chybu nebo urážku). V hotelu či ryokanu se přezouvá do papučí.' }
   ];
 
   return (
@@ -52,36 +59,42 @@ export function JapanGuidePage() {
           {/* Section 1 */}
           <section id="prehled" style={{ marginBottom: '2.5rem' }}>
             <h2 style={{ fontSize: '1.8rem', color: 'var(--accent-color)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
-              1. Základní přehled & Historie
+              {isEn ? '1. Overview & History' : '1. Základní přehled & Historie'}
             </h2>
             <p style={{ marginTop: '1rem', lineHeight: '1.8' }}>
-              <strong>Japonsko</strong> je císařská konstituční monarchie tvořená řetězcem čtyř hlavních ostrovů (Honšú, Hokkaidó, Kjúšú, Šikoku) a tisíci menších ostrůvků. Je světovou velmocí v technologiích, automobilovém průmyslu a pop-kultuře, přičemž si úzkostlivě chrání své staleté tradice.
+              {isEn
+                ? <><strong>Japan</strong> is a constitutional monarchy formed by four main islands (Honshu, Hokkaido, Kyushu, Shikoku) and thousands of smaller islands. It is a global leader in technology and pop-culture while carefully preserving centuries-old traditions.</>
+                : <><strong>Japonsko</strong> je císařská konstituční monarchie tvořená řetězcem čtyř hlavních ostrovů (Honšú, Hokkaidó, Kjúšú, Šikoku) a tisíci menších ostrůvků. Je světovou velmocí v technologiích, automobilovém průmyslu a pop-kultuře, přičemž si úzkostlivě chrání své staleté tradice.</>}
             </p>
             <p style={{ marginTop: '0.8rem', lineHeight: '1.8' }}>
-              Historie Japonska zahrnuje slavnou éru samurajů a šógunátů, období izolace <i>Sakoku</i>, meidžiovské modernizační reformy až po vybudování jednoho z nejvyspělejších a nejčistších států planety.
+              {isEn
+                ? <>Japanese history spans the famous era of samurai and shogunates, the <i>Sakoku</i> isolation period, and the Meiji modernization reforms, building one of the most advanced and cleanest nations on Earth.</>
+                : <>Historie Japonska zahrnuje slavnou éru samurajů a šógunátů, období izolace <i>Sakoku</i>, meidžiovské modernizační reformy až po vybudování jednoho z nejvyspělejších a nejčistších států planety.</>}
             </p>
           </section>
 
           {/* Section 2 */}
           <section id="geografie" style={{ marginBottom: '2.5rem' }}>
             <h2 style={{ fontSize: '1.8rem', color: 'var(--accent-color)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
-              2. Geografie, Města & Příroda
+              {isEn ? '2. Geography, Cities & Nature' : '2. Geografie, Města & Příroda'}
             </h2>
             <p style={{ marginTop: '1rem', lineHeight: '1.8' }}>
-              Povrch Japonska je ze 70 % hornatý a pokrytý lesy. Nejvyšším vrcholem je ikonická posvátná sopka <strong>Hora Fudži (3 776 m n. m.)</strong>.
+              {isEn
+                ? <>Over 70% of Japan is mountainous and forested. Its highest peak is the sacred volcano <strong>Mount Fuji (3,776 m)</strong>.</>
+                : <>Povrch Japonska je ze 70 % hornatý a pokrytý lesy. Nejvyšším vrcholem je ikonická posvátná sopka <strong>hora Fudži (3 776 m n. m.)</strong>.</>}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginTop: '1.2rem' }}>
               <div className="glass" style={{ padding: '1rem', borderRadius: '12px' }}>
-                <h4 style={{ color: '#ff66b2', margin: '0 0 0.4rem' }}>🗼 Tokio</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Nejlidnatější metropolitní oblast světa (37 mil. obyvatel). Centrum obchodu a pop-kultury.</p>
+                <h3 style={{ fontSize: '1.1rem', color: '#ff66b2', margin: '0 0 0.4rem' }}>🗼 {isEn ? 'Tokyo' : 'Tokio'}</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>{isEn ? 'The world’s largest metropolitan area (37M people). Hub of technology and pop-culture.' : 'Nejlidnatější metropolitní oblast světa (37 mil. obyvatel). Centrum obchodu a pop-kultury.'}</p>
               </div>
               <div className="glass" style={{ padding: '1rem', borderRadius: '12px' }}>
-                <h4 style={{ color: '#ef233c', margin: '0 0 0.4rem' }}>⛩️ Kjótó</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Bývalé císařské hlavní město s 2 000 chrámy, Bambusovým hájem a čtvrtí gejš Gion.</p>
+                <h3 style={{ fontSize: '1.1rem', color: '#ef233c', margin: '0 0 0.4rem' }}>⛩️ {isEn ? 'Kyoto' : 'Kjóto'}</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>{isEn ? 'Former imperial capital with 2,000 temples, Arashiyama bamboo grove, and Gion geisha district.' : 'Bývalé císařské hlavní město s 2 000 chrámy, Bambusovým hájem a čtvrtí gejš Gion.'}</p>
               </div>
               <div className="glass" style={{ padding: '1rem', borderRadius: '12px' }}>
-                <h4 style={{ color: '#3498db', margin: '0 0 0.4rem' }}>🍡 Ósaka</h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Kulinářské srdce Japonska, hrad Ósaka a rušná světelná čtvrť Dotonbori.</p>
+                <h3 style={{ fontSize: '1.1rem', color: '#3498db', margin: '0 0 0.4rem' }}>🍡 {isEn ? 'Osaka' : 'Ósaka'}</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>{isEn ? 'The culinary heart of Japan, Osaka Castle, and the vibrant neon streets of Dotonbori.' : 'Kulinářské srdce Japonska, hrad Ósaka a rušná světelná čtvrť Dotonbori.'}</p>
               </div>
             </div>
           </section>
@@ -89,18 +102,22 @@ export function JapanGuidePage() {
           {/* Section 3 */}
           <section id="jazyk-nabozenstvi" style={{ marginBottom: '2.5rem' }}>
             <h2 style={{ fontSize: '1.8rem', color: 'var(--accent-color)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
-              3. Jazyk & Náboženství
+              {isEn ? '3. Language & Religion' : '3. Jazyk & Náboženství'}
             </h2>
             <p style={{ marginTop: '1rem', lineHeight: '1.8' }}>
-              Oficiálním jazykem je <strong>japonština (Nihongo)</strong>, která využívá kombinaci tří píkebných systémů: <i>Hiragana</i>, <i>Katakana</i> a čínských znaků <i>Kandži</i>.
+              {isEn
+                ? <>The official language is <strong>Japanese (Nihongo)</strong>, which uses a combination of three writing systems: <i>Hiragana</i>, <i>Katakana</i>, and <i>Kanji</i> characters.</>
+                : <>Oficiálním jazykem je <strong>japonština (Nihongo)</strong>, která využívá kombinaci tří písemných soustav: <i>Hiragana</i>, <i>Katakana</i> a čínských znaků <i>Kandži</i>.</>}
             </p>
             <p style={{ marginTop: '0.8rem', lineHeight: '1.8' }}>
-              Japonci nepatří k dogmaticky náboženským národům, ale synchronně praktikují <strong>Šintoismus</strong> (přírodní kult animistických duchů Kami) a <strong>Buddhismus</strong>. Běžně se říká: <i>„Japonec se rodí jako šintoista, žení jako křesťan a umírá jako buddhisté.“</i>
+              {isEn
+                ? <>Japanese culture harmoniously blends <strong>Shinto</strong> (nature spirits Kami) and <strong>Buddhism</strong>.</>
+                : <>Japonci nepatří k dogmaticky náboženským národům, ale zároveň praktikují <strong>šintoismus</strong> (přírodní kult animistických duchů Kami) a <strong>buddhismus</strong>.</>}
             </p>
 
             <div style={{ marginTop: '1rem' }}>
               <Link to="/japonsky" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-                <i className="fa-solid fa-graduation-cap"></i> Vyzkoušet výuku slovíček v naší aplikaci
+                <i className="fa-solid fa-graduation-cap"></i> {isEn ? 'Practice Japanese Phrases & AI Tutor' : 'Vyzkoušet výuku slovíček v naší aplikaci'}
               </Link>
             </div>
           </section>
@@ -108,17 +125,19 @@ export function JapanGuidePage() {
           {/* Section 4 */}
           <section id="gastronomie" style={{ marginBottom: '2.5rem' }}>
             <h2 style={{ fontSize: '1.8rem', color: 'var(--accent-color)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
-              4. Japonská gastronomie (Washoku)
+              {isEn ? '4. Japanese Gastronomy (Washoku)' : '4. Japonská gastronomie (Washoku)'}
             </h2>
             <p style={{ marginTop: '1rem', lineHeight: '1.8' }}>
-              Japonská kuchyně (Washoku) je zapsána na seznamu nehmotného dědictví UNESCO. Je založena na absolutní čerstvosti surovin, estetické prezentaci a chuti <i>Umami</i>. Mezi nejznámější pokrmy patří <strong>Suši, Ramen, Tempura, Takoyaki a čaj Matcha</strong>.
+              {isEn
+                ? <>Japanese cuisine (Washoku) is listed as UNESCO Intangible Cultural Heritage, built on fresh ingredients, presentation, and <i>Umami</i> flavor. Must-try dishes include <strong>Sushi, Ramen, Tempura, Takoyaki, and Matcha tea</strong>.</>
+                : <>Japonská kuchyně (Washoku) je zapsána na seznamu nehmotného dědictví UNESCO. Je založena na absolutní čerstvosti surovin, estetické prezentaci a chuti <i>Umami</i>. Mezi nejznámější pokrmy patří <strong>suši, ramen, tempura, takoyaki a čaj matcha</strong>.</>}
             </p>
           </section>
 
           {/* Section 5: FAQ */}
           <section id="faq">
             <h2 style={{ fontSize: '1.8rem', color: 'var(--accent-color)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>
-              5. Často kladené otázky o Japonsku (FAQ)
+              {isEn ? '5. Frequently Asked Questions (FAQ)' : '5. Často kladené otázky o Japonsku (FAQ)'}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
               {faqs.map((faq, idx) => (

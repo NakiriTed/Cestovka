@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import { compressImageToDataUrl, db, collection, query, where, getDocs } from '../firebase';
 
 export function ProfilePage() {
   const { currentUser, userProfile, logout, updateUserProfile, openLoginModal } = useAuth();
   const { itineraries, deleteItinerary } = useData();
+  const { currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -85,10 +88,10 @@ export function ProfilePage() {
     return (
       <main style={{ maxWidth: '600px', margin: '6rem auto', padding: '2rem', textAlign: 'center' }}>
         <div className="glass" style={{ padding: '3rem', borderRadius: '20px' }}>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.8rem' }}>Uživatel není přihlášen</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 1.5rem' }}>Pro zobrazení profilu, uložených itinerářů a rezervací se prosím přihlaste.</p>
+          <h1 style={{ fontSize: '2rem', marginBottom: '0.8rem' }}>{isEn ? 'User Not Signed In' : 'Uživatel není přihlášen'}</h1>
+          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 1.5rem' }}>{isEn ? 'Please sign in to view your profile, saved itineraries, and reservations.' : 'Pro zobrazení profilu, uložených itinerářů a rezervací se prosím přihlaste.'}</p>
           <button type="button" className="btn btn-primary" onClick={openLoginModal}>
-            <i className="fa-solid fa-right-to-bracket"></i> Přihlásit se
+            <i className="fa-solid fa-right-to-bracket"></i> {isEn ? 'Sign In' : 'Přihlásit se'}
           </button>
         </div>
       </main>
@@ -132,15 +135,15 @@ export function ProfilePage() {
         <div>
           {!isEditing ? (
             <button className="btn btn-primary" onClick={() => setIsEditing(true)}>
-              <i className="fa-solid fa-pen"></i> Upravit profil
+              <i className="fa-solid fa-pen"></i> {isEn ? 'Edit Profile' : 'Upravit profil'}
             </button>
           ) : (
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }} onClick={() => setIsEditing(false)}>
-                Zrušit
+                {isEn ? 'Cancel' : 'Zrušit'}
               </button>
               <button className="btn btn-primary" onClick={handleSaveProfile} disabled={isSaving}>
-                {isSaving ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-floppy-disk"></i> Uložit</>}
+                {isSaving ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-floppy-disk"></i> {isEn ? 'Save' : 'Uložit'}</>}
               </button>
             </div>
           )}
@@ -151,52 +154,52 @@ export function ProfilePage() {
         
         {/* Social / Info Section */}
         <div className="glass" style={{ padding: '2rem', borderRadius: '20px' }}>
-          <h2 style={{ marginBottom: '1.5rem', color: 'var(--accent-color)' }}><i className="fa-solid fa-address-card"></i> O mně (Pro parťáky)</h2>
+          <h2 style={{ marginBottom: '1.5rem', color: 'var(--accent-color)' }}><i className="fa-solid fa-address-card"></i> {isEn ? 'About Me (For Travel Buddies)' : 'O mně (Pro parťáky)'}</h2>
           
           {isEditing ? (
             <form style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div className="form-group">
-                <label>Přezdívka (Zobrazí se ve fóru)</label>
-                <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                <label htmlFor="prof-nick">{isEn ? 'Nickname (Shown in Forum)' : 'Přezdívka (Zobrazí se ve fóru)'}</label>
+                <input id="prof-nick" type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label>Skutečné jméno</label>
-                  <input type="text" value={realName} onChange={e => setRealName(e.target.value)} placeholder="Jan Novák" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                  <label htmlFor="prof-realname">{isEn ? 'Full Name' : 'Skutečné jméno'}</label>
+                  <input id="prof-realname" type="text" value={realName} onChange={e => setRealName(e.target.value)} placeholder="Jan Novák" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
                 </div>
                 <div className="form-group">
-                  <label>Město</label>
-                  <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="Praha" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                  <label htmlFor="prof-city">{isEn ? 'City' : 'Město'}</label>
+                  <input id="prof-city" type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="Praha" style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label>Datum narození</label>
-                  <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                  <label htmlFor="prof-birth">{isEn ? 'Birth Date' : 'Datum narození'}</label>
+                  <input id="prof-birth" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
                 </div>
                 <div className="form-group">
-                  <label>Pohlaví</label>
-                  <select value={gender} onChange={e => setGender(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: 'var(--text-main)' }}>
-                    <option value="">Nevybráno</option>
-                    <option value="Muž">Muž</option>
-                    <option value="Žena">Žena</option>
+                  <label htmlFor="prof-gender">{isEn ? 'Gender' : 'Pohlaví'}</label>
+                  <select id="prof-gender" value={gender} onChange={e => setGender(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: 'var(--text-main)' }}>
+                    <option value="">{isEn ? 'Not selected' : 'Nevybráno'}</option>
+                    <option value="Muž">{isEn ? 'Male' : 'Muž'}</option>
+                    <option value="Žena">{isEn ? 'Female' : 'Žena'}</option>
                   </select>
                 </div>
               </div>
               <div className="form-group">
-                <label>Moje cestovatelské sny a bio</label>
-                <textarea rows="4" value={trips} onChange={e => setTrips(e.target.value)} placeholder="Napište něco o sobě, ať vás ostatní lépe poznají..." style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
+                <label htmlFor="prof-bio">{isEn ? 'My Travel Dreams & Bio' : 'Moje cestovatelské sny a bio'}</label>
+                <textarea id="prof-bio" rows="4" value={trips} onChange={e => setTrips(e.target.value)} placeholder={isEn ? 'Write something about yourself...' : 'Napište něco o sobě, ať vás ostatní lépe poznají...'} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)' }} />
               </div>
             </form>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', color: 'var(--text-main)' }}>
-              <div><strong style={{ color: 'var(--text-muted)' }}>Skutečné jméno:</strong> {userProfile?.realName || '-'}</div>
-              <div><strong style={{ color: 'var(--text-muted)' }}>Pohlaví:</strong> {userProfile?.gender || '-'}</div>
-              <div><strong style={{ color: 'var(--text-muted)' }}>Datum narození:</strong> {userProfile?.birthDate ? new Date(userProfile.birthDate).toLocaleDateString('cs-CZ') : '-'}</div>
+              <div><strong style={{ color: 'var(--text-muted)' }}>{isEn ? 'Full Name:' : 'Skutečné jméno:'}</strong> {userProfile?.realName || '-'}</div>
+              <div><strong style={{ color: 'var(--text-muted)' }}>{isEn ? 'Gender:' : 'Pohlaví:'}</strong> {userProfile?.gender || '-'}</div>
+              <div><strong style={{ color: 'var(--text-muted)' }}>{isEn ? 'Birth Date:' : 'Datum narození:'}</strong> {userProfile?.birthDate ? new Date(userProfile.birthDate).toLocaleDateString(isEn ? 'en-US' : 'cs-CZ') : '-'}</div>
               <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                <strong style={{ color: 'var(--text-muted)' }}>Bio & Cestovatelské sny:</strong>
+                <strong style={{ color: 'var(--text-muted)' }}>{isEn ? 'Bio & Travel Dreams:' : 'Bio & Cestovatelské sny:'}</strong>
                 <p style={{ marginTop: '0.5rem', fontStyle: userProfile?.trips ? 'normal' : 'italic', color: userProfile?.trips ? 'inherit' : 'rgba(255,255,255,0.4)' }}>
-                  {userProfile?.trips || 'Tento cestovatel o sobě zatím nic nenapsal.'}
+                  {userProfile?.trips || (isEn ? 'This traveler has not written a bio yet.' : 'Tento cestovatel o sobě zatím nic nenapsal.')}
                 </p>
               </div>
             </div>
@@ -205,7 +208,7 @@ export function ProfilePage() {
 
         {/* Trips / Reservations Section */}
         <div className="glass" style={{ padding: '2rem', borderRadius: '20px', display: 'flex', flexDirection: 'column' }}>
-          <h2 style={{ marginBottom: '1.5rem', color: 'var(--accent-color)' }}><i className="fa-solid fa-plane-departure"></i> Moje rezervované zájezdy</h2>
+          <h2 style={{ marginBottom: '1.5rem', color: 'var(--accent-color)' }}><i className="fa-solid fa-plane-departure"></i> {isEn ? 'My Booked Trips' : 'Moje rezervované zájezdy'}</h2>
           
           {loadingReservations ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -220,14 +223,14 @@ export function ProfilePage() {
                     <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>{res.price.toLocaleString('cs-CZ')} Kč</span>
                   </div>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                    <i className="fa-regular fa-calendar"></i> Termín: {res.date}
+                    <i className="fa-regular fa-calendar"></i> {isEn ? 'Date:' : 'Termín:'} {res.date}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                     <span style={{ color: res.status === 'pending' ? '#f39c12' : '#2ecc71' }}>
-                      {res.status === 'pending' ? '⏳ Čeká na platbu/potvrzení' : '✅ Potvrzeno'}
+                      {res.status === 'pending' ? (isEn ? '⏳ Awaiting payment/confirmation' : '⏳ Čeká na platbu/potvrzení') : (isEn ? '✅ Confirmed' : '✅ Potvrzeno')}
                     </span>
                     <span style={{ color: 'rgba(255,255,255,0.3)' }}>
-                      Vytvořeno: {new Date(res.createdAt).toLocaleDateString('cs-CZ')}
+                      {isEn ? 'Created:' : 'Vytvořeno:'} {new Date(res.createdAt).toLocaleDateString(isEn ? 'en-US' : 'cs-CZ')}
                     </span>
                   </div>
                 </div>
@@ -236,12 +239,12 @@ export function ProfilePage() {
           ) : (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem', color: 'rgba(255,255,255,0.3)' }}>
               <i className="fa-solid fa-suitcase-rolling fa-4x"></i>
-              <p>Zatím nemáte žádné aktivní rezervace.</p>
+              <p>{isEn ? 'You have no active reservations yet.' : 'Zatím nemáte žádné aktivní rezervace.'}</p>
             </div>
           )}
 
           <button className="btn" style={{ marginTop: '2rem', background: '#d90429', color: '#fff', width: '100%' }} onClick={logout}>
-            <i className="fa-solid fa-right-from-bracket"></i> Odhlásit se
+            <i className="fa-solid fa-right-from-bracket"></i> {isEn ? 'Sign Out' : 'Odhlásit se'}
           </button>
         </div>
 
@@ -251,11 +254,11 @@ export function ProfilePage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '2rem' }}>
         <div className="glass" style={{ padding: '2rem', borderRadius: '20px' }}>
           <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: 'var(--accent-color)' }}>
-            <i className="fa-solid fa-wand-magic-sparkles"></i> Moje vlastní itineráře ({myCustomPlans.length})
+            <i className="fa-solid fa-wand-magic-sparkles"></i> {isEn ? `My Custom Itineraries (${myCustomPlans.length})` : `Moje vlastní itineráře (${myCustomPlans.length})`}
           </h2>
           {myCustomPlans.length === 0 ? (
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              Zatím jste si nesestavili vlastní itinerář. Můžete si ho vytvořit v sekci <Link to="/planner" style={{ color: 'var(--accent-color)' }}>Plánovač</Link>.
+              {isEn ? <>You haven't created a custom itinerary yet. You can build one in the <Link to="/planner" style={{ color: 'var(--accent-color)' }}>Planner</Link>.</> : <>Zatím jste si nesestavili vlastní itinerář. Můžete si ho vytvořit v sekci <Link to="/planner" style={{ color: 'var(--accent-color)' }}>Plánovač</Link>.</>}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
@@ -269,7 +272,7 @@ export function ProfilePage() {
                   </div>
                   <button
                     type="button"
-                    aria-label="Smazat vlastní itinerář"
+                    aria-label={isEn ? 'Delete custom itinerary' : 'Smazat vlastní itinerář'}
                     onClick={() => deleteItinerary(plan.id)}
                     style={{ background: 'rgba(231,76,60,0.2)', border: '1px solid #e74c3c', color: '#ff8a80', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer' }}
                   >
@@ -283,11 +286,11 @@ export function ProfilePage() {
 
         <div className="glass" style={{ padding: '2rem', borderRadius: '20px' }}>
           <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', color: 'var(--accent-color)' }}>
-            <i className="fa-solid fa-heart"></i> Oblíbené zájezdy ({favoritePlans.length})
+            <i className="fa-solid fa-heart"></i> {isEn ? `Favorite Trips (${favoritePlans.length})` : `Oblíbené zájezdy (${favoritePlans.length})`}
           </h2>
           {favoritePlans.length === 0 ? (
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              Zatím nemáte uložené žádné oblíbené zájezdy. Označte je srdíčkem v <Link to="/planner" style={{ color: 'var(--accent-color)' }}>Plánovači</Link>.
+              {isEn ? <>You have no favorite trips saved yet. Click the heart icon in the <Link to="/planner" style={{ color: 'var(--accent-color)' }}>Planner</Link>.</> : <>Zatím nemáte uložené žádné oblíbené zájezdy. Označte je srdíčkem v <Link to="/planner" style={{ color: 'var(--accent-color)' }}>Plánovači</Link>.</>}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>

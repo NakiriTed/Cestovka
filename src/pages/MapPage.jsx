@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
 export function MapPage() {
@@ -7,6 +8,8 @@ export function MapPage() {
   const leafletInstance = useRef(null);
   const tileLayerRef = useRef(null);
   const { theme } = useTheme();
+  const { currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
   const navigate = useNavigate();
 
   const plansDB = {
@@ -197,8 +200,8 @@ export function MapPage() {
   return (
     <main className="map-wrap" style={{ maxWidth: '1200px', margin: '0 auto', padding: '6rem 2rem 3rem' }}>
       <div className="glass" style={{ padding: '2rem', borderRadius: '20px', textAlign: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2.4rem' }}><i className="fa-solid fa-map-location-dot" style={{ color: 'var(--accent-color)' }}></i> Interaktivní mapa zájezdů</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Klikněte na svítící bod na mapě a zjistěte, které plány vás do tohoto místa zavedou.</p>
+        <h1 style={{ fontSize: '2.4rem' }}><i className="fa-solid fa-map-location-dot" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Interactive Trip Map' : 'Interaktivní mapa zájezdů'}</h1>
+        <p style={{ color: 'var(--text-muted)' }}>{isEn ? 'Click on any glowing marker on the map to see which itineraries visit that destination.' : 'Klikněte na svítící bod na mapě a zjistěte, které plány vás do tohoto místa zavedou.'}</p>
       </div>
 
       <div

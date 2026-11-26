@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export function AIChatbot() {
   const location = useLocation();
+  const { currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
@@ -105,12 +108,9 @@ export function AIChatbot() {
     return <span dangerouslySetInnerHTML={{ __html: formattedText }} />;
   };
 
-  const quickPrompts = [
-    'Potřebuji vízum?',
-    'Co vidět v Tokiu?',
-    'Jaká je cena zájezdů?',
-    'Kdy vyrazit za sakurami?'
-  ];
+  const quickPrompts = isEn
+    ? ['Do I need a visa?', 'What to see in Tokyo?', 'How much are the trips?', 'When to see cherry blossoms?']
+    : ['Potřebuji vízum?', 'Co vidět v Tokiu?', 'Jaká je cena zájezdů?', 'Kdy vyrazit za sakurami?'];
 
   return (
     <>
@@ -166,7 +166,7 @@ export function AIChatbot() {
           <div style={{ padding: '1rem 1.2rem', background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
               <span>🌸</span>
-              <span>Tedův AI Asistent</span>
+              <span>{isEn ? "Ted's AI Assistant" : 'Tedův AI Asistent'}</span>
             </div>
             <button 
               onClick={() => setIsOpen(false)}

@@ -8,8 +8,132 @@ import { db, collection, addDoc } from '../firebase';
 import { TripReviews } from '../components/TripReviews';
 
 export function PlannerPage() {
-  const { t } = useLanguage();
+  const { t, currentLang } = useLanguage();
+  const isEn = currentLang === 'en';
   const { itineraries, addItinerary, deleteItinerary, resolveImage, getMediaKey } = useData();
+
+  const EN_PLANS = {
+    'jp-gold': {
+      title: 'Golden Route of Japan (14 days)',
+      desc: 'Tokyo, Kyoto, Osaka, Mt. Fuji, and Nara. The most popular route for your first visit to Japan.',
+      duration: '14 days',
+      country: 'Japan 🇯🇵',
+      tag: 'for beginners',
+      included: [
+        'Round-trip flights Prague – Tokyo – Prague (economy)',
+        'Accommodation in 3–4* hotels (13 nights)',
+        'Daily breakfast included',
+        'Experienced tour guide throughout the trip',
+        'Shinkansen bullet train Tokyo – Kyoto',
+        'Admission to Mt. Fuji area, Himeji Castle & Senso-ji Temple'
+      ],
+      notIncluded: [
+        'Lunches and dinners',
+        'Personal expenses and souvenirs',
+        'Travel insurance',
+        'Visas (visa-free entry for EU/CZ citizens)'
+      ],
+      days: [
+        { day: 'Day 1', title: 'Departure from Prague/Vienna', desc: 'Airport meeting, check-in, and flight to Tokyo.' },
+        { day: 'Day 2', title: 'Arrival in Tokyo & Shibuya', desc: 'Hotel check-in and the famous Shibuya Crossing.' },
+        { day: 'Day 3', title: 'Historic & Modern Tokyo', desc: 'Senso-ji Temple, Akihabara, and views from Tokyo Tower.' },
+        { day: 'Day 4', title: 'Day Trip to Mt. Fuji (Kawaguchiko)', desc: 'Lake Kawaguchiko and Chureito Pagoda.' },
+        { day: 'Day 5–8', title: 'Kyoto & Temples', desc: 'Shinkansen to Kyoto. Golden Pavilion and Fushimi Inari.' },
+        { day: 'Day 9–11', title: 'Nara & Culinary Osaka', desc: 'Friendly deer in Nara and Dotonbori food district in Osaka.' },
+        { day: 'Day 12–13', title: 'Hiroshima & Miyajima Island', desc: 'Peace Memorial Park and the floating Torii gate.' },
+        { day: 'Day 14', title: 'Return Home', desc: 'Last souvenir shopping and flight back home.' }
+      ]
+    },
+    'kr-seoul': {
+      title: 'Korean Metropolis & History (10 days)',
+      desc: 'Seoul, Busan, historic Gyeongju, and Jeju Island. A blend of royal history, K-pop, and gastronomy.',
+      duration: '10 days',
+      country: 'South Korea 🇰🇷',
+      tag: 'sightseeing',
+      included: [
+        'Round-trip flights Prague – Seoul – Prague (economy)',
+        'Accommodation in 3–4* hotels (9 nights)',
+        'Daily breakfast included',
+        'Experienced tour guide throughout the trip',
+        'KTX high-speed train Seoul – Busan',
+        'Admission to Gyeongbokgung Palace'
+      ],
+      notIncluded: [
+        'Lunches and dinners',
+        'Personal expenses and souvenirs',
+        'Travel insurance',
+        'Optional Hanbok rental'
+      ],
+      days: [
+        { day: 'Day 1', title: 'Departure from Prague', desc: 'Check-in and flight to Seoul.' },
+        { day: 'Day 2', title: 'Arrival in Seoul & Myeongdong', desc: 'Evening walk through the Myeongdong street-food district.' },
+        { day: 'Day 3', title: 'Gyeongbokgung Royal Palace', desc: 'Visiting the royal palace in traditional Hanbok attire.' },
+        { day: 'Day 4–6', title: 'KTX High-Speed Train to Busan', desc: 'Haeundae Beach and colorful Gamcheon Culture Village.' },
+        { day: 'Day 7–9', title: 'Jeju Island', desc: 'Flight to the volcanic island of Jeju.' },
+        { day: 'Day 10', title: 'Return Home', desc: 'Flight from Seoul back to Prague.' }
+      ]
+    },
+    'jp-anime': {
+      title: 'Akihabara & Pop-Culture (12 days)',
+      desc: 'Anime, Pokémon, arcades in Akihabara, and Universal Studios theme park in Osaka.',
+      duration: '12 days',
+      country: 'Japan 🇯🇵',
+      tag: 'entertainment',
+      included: [
+        'Round-trip flights Prague – Tokyo – Prague (economy)',
+        'Accommodation in 3–4* hotels (11 nights)',
+        'Daily breakfast included',
+        'Experienced tour guide throughout the trip',
+        'Admission to Pokémon Center Tokyo',
+        'Admission to Universal Studios Japan in Osaka'
+      ],
+      notIncluded: [
+        'Lunches and dinners',
+        'Arcade game tokens',
+        'Personal expenses and souvenirs',
+        'Travel insurance'
+      ],
+      days: [
+        { day: 'Day 1–4', title: 'Tokyo Pop-Culture Paradise', desc: 'Akihabara, Pokémon Center, Ghibli Museum, Harajuku.' },
+        { day: 'Day 5–8', title: 'Kyoto & Nintendo World', desc: 'Historic Kyoto and trip to Super Nintendo World.' },
+        { day: 'Day 9–11', title: 'Osaka Universal Studios', desc: 'Full day of fun at Universal Studios Japan.' },
+        { day: 'Day 12', title: 'Return Flight', desc: 'Flight back home.' }
+      ]
+    }
+  };
+
+  const translateTag = (tag) => {
+    if (!isEn) return tag;
+    const map = { 'vše': 'all', 'pro nováčky': 'for beginners', 'zábava': 'entertainment', 'poznávací': 'sightseeing', 'adrenalin': 'adrenaline', 'oblíbené': 'favorites' };
+    return map[tag] || tag;
+  };
+
+  const localizePlan = (item) => {
+    if (!item || !isEn) return item;
+    const tr = EN_PLANS[item.id];
+    if (!tr) {
+      return {
+        ...item,
+        tag: translateTag(item.tag),
+        country: item.country?.replace('Japonsko', 'Japan').replace('Jižní Korea', 'South Korea'),
+        duration: item.duration?.replace('dní', 'days')
+      };
+    }
+    return {
+      ...item,
+      title: tr.title,
+      desc: tr.desc,
+      duration: tr.duration,
+      country: tr.country,
+      tag: tr.tag,
+      days: tr.days,
+      accommodation: item.accommodation ? {
+        ...item.accommodation,
+        included: tr.included,
+        notIncluded: tr.notIncluded
+      } : item.accommodation
+    };
+  };
   const location = useLocation();
   const { theme } = useTheme();
   const { currentUser } = useAuth();
@@ -477,50 +601,53 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
     <main className="planner-wrap" style={{ maxWidth: '1200px', margin: '0 auto', padding: '6rem 2rem 3rem' }}>
       
       {/* Detailed Plan View with Route Map and Location Photos */}
-      {activeDetailPlan ? (
+      {activeDetailPlan ? (() => {
+        const dp = localizePlan(activeDetailPlan);
+        return (
         <div className="glass" style={{ padding: '3rem', borderRadius: '24px' }}>
           <button 
             className="btn" 
             style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', marginBottom: '2rem' }}
             onClick={() => setActiveDetailPlan(null)}
           >
-            <i className="fa-solid fa-arrow-left"></i> Zpět na přehled zájezdů
+            <i className="fa-solid fa-arrow-left"></i> {isEn ? 'Back to All Trips' : 'Zpět na přehled zájezdů'}
           </button>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem' }}>
             <div>
               <span className="phrase-category-tag" style={{ fontSize: '0.9rem', padding: '4px 12px', marginBottom: '0.5rem', display: 'inline-block' }}>
-                {activeDetailPlan.country} &bull; {activeDetailPlan.tag}
+                {dp.country} &bull; {dp.tag}
               </span>
-              <h1 style={{ fontSize: '2.5rem', margin: '0.5rem 0' }}>{activeDetailPlan.title}</h1>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '700px' }}>{activeDetailPlan.desc}</p>
+              <h1 style={{ fontSize: '2.5rem', margin: '0.5rem 0' }}>{dp.title}</h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '700px' }}>{dp.desc}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--accent-color)' }}>
-                {activeDetailPlan.price.toLocaleString('cs-CZ')} Kč
+                {dp.price.toLocaleString('cs-CZ')} Kč
               </div>
-              <span style={{ color: 'var(--text-muted)' }}><i className="fa-regular fa-clock"></i> {activeDetailPlan.duration}</span>
+              <span style={{ color: 'var(--text-muted)' }}><i className="fa-regular fa-clock"></i> {dp.duration}</span>
               
               {/* Sold out vs dates switcher */}
-              {(!activeDetailPlan.dates || activeDetailPlan.dates.length === 0) ? (
+              {(!dp.dates || dp.dates.length === 0) ? (
                 <div style={{ marginTop: '1rem', background: 'rgba(231, 76, 60, 0.2)', color: '#e74c3c', border: '1px solid #e74c3c', padding: '8px 16px', borderRadius: '12px', fontWeight: 'bold' }}>
-                  <i className="fa-solid fa-circle-exclamation"></i> Termíny jsou momentálně plně obsazeny
+                  <i className="fa-solid fa-circle-exclamation"></i> {isEn ? 'All dates are currently sold out' : 'Termíny jsou momentálně plně obsazeny'}
                 </div>
               ) : (
                 <div style={{ marginTop: '1rem' }}>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Dostupné termíny:</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>{isEn ? 'Available dates:' : 'Dostupné termíny:'}</div>
                   <select 
+                    aria-label={isEn ? 'Available dates' : 'Dostupné termíny'}
                     style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.5)', color: '#fff', marginBottom: '0.8rem' }}
-                    onChange={(e) => openBooking(activeDetailPlan, e.target.value)}
+                    onChange={(e) => openBooking(dp, e.target.value)}
                   >
-                    {activeDetailPlan.dates.map((d, idx) => (
+                    {dp.dates.map((d, idx) => (
                       <option key={idx} value={d}>{d}</option>
                     ))}
                   </select>
 
                   <div>
-                    <button className="btn btn-primary" onClick={(e) => openBooking(activeDetailPlan, activeDetailPlan.dates[0], e)}>
-                      <i className="fa-solid fa-calendar-check"></i> Rezervovat tento zájezd
+                    <button className="btn btn-primary" onClick={(e) => openBooking(dp, dp.dates[0], e)}>
+                      <i className="fa-solid fa-calendar-check"></i> {isEn ? 'Book This Trip' : 'Rezervovat tento zájezd'}
                     </button>
                   </div>
                 </div>
@@ -532,9 +659,9 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
           {/* Location Photos Section */}
           <div style={{ marginBottom: '3rem' }}>
-            <h2><i className="fa-solid fa-camera" style={{ color: 'var(--accent-color)' }}></i> Místa, kam se podíváte</h2>
+            <h2><i className="fa-solid fa-camera" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Places You Will Visit' : 'Místa, kam se podíváte'}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '1.2rem' }}>
-              {(activeDetailPlan.photos || [activeDetailPlan.image]).map((p, idx) => {
+              {(dp.photos || [dp.image]).map((p, idx) => {
                 const caption = PHOTO_CAPTIONS[getMediaKey(p)] || PHOTO_CAPTIONS[p] || '';
                 return (
                   <div
@@ -549,7 +676,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                     onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(239,35,60,0.35)'; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = ''; }}
                   >
-                    <img src={p} alt={caption || 'Místo zájezdu'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={p} alt={caption || (isEn ? 'Trip destination' : 'Místo zájezdu')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     {caption && (
                       <div style={{
                         position: 'absolute', bottom: 0, left: 0, right: 0,
@@ -578,14 +705,14 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
           </div>
 
           {/* Accommodation Section */}
-          {activeDetailPlan.accommodation && (
+          {dp.accommodation && (
             <div style={{ marginBottom: '3rem' }}>
-              <h2><i className="fa-solid fa-bed" style={{ color: 'var(--accent-color)' }}></i> Ubytování po trasách</h2>
+              <h2><i className="fa-solid fa-bed" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Accommodation Along the Route' : 'Ubytování po trasách'}</h2>
 
               {/* Hotels grid */}
-              {(activeDetailPlan.accommodation.hotels || []).length > 0 && (
+              {(dp.accommodation.hotels || []).length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1.2rem', marginBottom: '1.5rem' }}>
-                  {activeDetailPlan.accommodation.hotels.map((hotel, i) => (
+                  {dp.accommodation.hotels.map((hotel, i) => (
                     <div key={i} className="glass" style={{ padding: '1.2rem', borderRadius: '16px', position: 'relative', overflow: 'hidden' }}>
                       <div style={{
                         position: 'absolute', top: 0, left: 0, right: 0, height: '3px',
@@ -599,7 +726,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                       {hotel.pricePerNight > 0 && (
                         <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px', background: 'rgba(239,35,60,0.12)', border: '1px solid rgba(239,35,60,0.3)', borderRadius: '8px', padding: '3px 10px' }}>
                           <span style={{ fontWeight: 800, color: 'var(--accent-color)', fontSize: '1rem' }}>{hotel.pricePerNight.toLocaleString('cs-CZ')}</span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Kč / noc</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{isEn ? 'CZK / night' : 'Kč / noc'}</span>
                         </div>
                       )}
                     </div>
@@ -612,10 +739,10 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                   <div>
                     <div style={{ fontWeight: 700, color: '#2ecc71', marginBottom: '0.7rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <i className="fa-solid fa-circle-check"></i> Co je v ceně
+                      <i className="fa-solid fa-circle-check"></i> {isEn ? "What's Included" : 'Co je v ceně'}
                     </div>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {(activeDetailPlan.accommodation.included || []).map((item, i) => (
+                      {(dp.accommodation.included || []).map((item, i) => (
                         <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
                           <i className="fa-solid fa-check" style={{ color: '#2ecc71', marginTop: '3px', flexShrink: 0 }}></i>
                           {item}
@@ -625,10 +752,10 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, color: '#e74c3c', marginBottom: '0.7rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <i className="fa-solid fa-circle-xmark"></i> Co není v ceně
+                      <i className="fa-solid fa-circle-xmark"></i> {isEn ? 'Not Included' : 'Co není v ceně'}
                     </div>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {(activeDetailPlan.accommodation.notIncluded || []).map((item, i) => (
+                      {(dp.accommodation.notIncluded || []).map((item, i) => (
                         <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
                           <i className="fa-solid fa-xmark" style={{ color: '#e74c3c', marginTop: '3px', flexShrink: 0 }}></i>
                           {item}
@@ -642,15 +769,25 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
           )}
 
           {/* Transport & Subway Warning Section */}
-          {(activeDetailPlan.country.includes('Japonsko') || activeDetailPlan.country.includes('Korea')) && (
+          {(activeDetailPlan.country.includes('Japonsko') || activeDetailPlan.country.includes('Korea') || activeDetailPlan.country.includes('Japan')) && (
             <div style={{ marginBottom: '3rem', background: 'rgba(239, 35, 60, 0.08)', padding: '2rem', borderRadius: '20px', border: '1px solid rgba(239, 35, 60, 0.3)' }}>
               <h2 style={{ color: 'var(--accent-color)', marginBottom: '1rem' }}>
-                <i className="fa-solid fa-train-subway"></i> Specifika lokální dopravy a metra
+                <i className="fa-solid fa-train-subway"></i> {isEn ? 'Local Transport & Subway System' : 'Specifika lokální dopravy a metra'}
               </h2>
               <p style={{ color: '#fff', fontSize: '1.05rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-                Ať už jste v Tokiu, Ósace, nebo Soulu – <strong>orientace v místním metru opravdu není žádná sranda.</strong> Jedná se o jedny z nejrozsáhlejších dopravních sítí na světě. Různé linky často vlastní různé soukromé společnosti, přestupy pod zemí mohou trvat i 15 minut chůze a ve špičce vás čeká neuvěřitelné množství lidí. 
-                <br /><br />
-                Ale nebojte se – v ceně zájezdu je náš zkušený průvodce, který vás celým tímto "podzemním labyrintem" provede bez stresu a ukáže vám ty nejlepší triky, jak se vyhnout davům.
+                {isEn ? (
+                  <>
+                    Whether you are in Tokyo, Osaka, or Seoul — <strong>navigating the local subway system can be overwhelming.</strong> These are among the largest transit networks in the world, operated by multiple private companies with complex underground transfers.
+                    <br /><br />
+                    Don’t worry — our experienced tour guide is included in the trip price and will lead you through this underground labyrinth stress-free!
+                  </>
+                ) : (
+                  <>
+                    Ať už jste v Tokiu, Ósace, nebo Soulu – <strong>orientace v místním metru opravdu není žádná sranda.</strong> Jedná se o jedny z nejrozsáhlejších dopravních sítí na světě. Různé linky často vlastní různé soukromé společnosti, přestupy pod zemí mohou trvat i 15 minut chůze a ve špičce vás čeká neuvěřitelné množství lidí. 
+                    <br /><br />
+                    Ale nebojte se – v ceně zájezdu je náš zkušený průvodce, který vás celým tímto "podzemním labyrintem" provede bez stresu a ukáže vám ty nejlepší triky, jak se vyhnout davům.
+                  </>
+                )}
               </p>
               
               <div 
@@ -660,17 +797,17 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                   src: resolveImage(activeDetailPlan.country.includes('Japonsko') 
                     ? 'https://storage.googleapis.com/cestovka-55f10.firebasestorage.app/img/SubwayTokyo.png' 
                     : 'https://storage.googleapis.com/cestovka-55f10.firebasestorage.app/img/seoul_subway_map.webp'), 
-                  caption: `Mapa metra - ${activeDetailPlan.country}` 
+                  caption: `${isEn ? 'Subway Map' : 'Mapa metra'} - ${dp.country}` 
                 })}
               >
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '0.8rem', background: 'rgba(0,0,0,0.7)', textAlign: 'center', fontWeight: 'bold', zIndex: 2 }}>
-                  <i className="fa-solid fa-magnifying-glass-plus"></i> Rozkliknout ukázku mapy metra ({activeDetailPlan.country.replace(/ .*/, '')})
+                  <i className="fa-solid fa-magnifying-glass-plus"></i> {isEn ? 'Click to enlarge subway map' : 'Rozkliknout ukázku mapy metra'} ({dp.country.replace(/ .*/, '')})
                 </div>
                 <img 
                   src={resolveImage(activeDetailPlan.country.includes('Japonsko') 
                     ? 'https://storage.googleapis.com/cestovka-55f10.firebasestorage.app/img/SubwayTokyo.png' 
                     : 'https://storage.googleapis.com/cestovka-55f10.firebasestorage.app/img/seoul_subway_map.webp')} 
-                  alt={`Mapa metra ${activeDetailPlan.country}`} 
+                  alt={`${isEn ? 'Subway Map' : 'Mapa metra'} ${dp.country}`} 
                   style={{ width: '100%', height: '220px', objectFit: 'cover', opacity: 0.8, filter: 'brightness(0.9)', transition: 'transform 0.3s' }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                   onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'} 
@@ -681,9 +818,9 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
           {/* Interactive Route Map Section */}
           <div style={{ marginBottom: '3rem' }}>
-            <h2><i className="fa-solid fa-route" style={{ color: 'var(--accent-color)' }}></i> Interaktivní trasa zájezdu na mapě</h2>
+            <h2><i className="fa-solid fa-route" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Interactive Trip Route Map' : 'Interaktivní trasa zájezdu na mapě'}</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Zastávky na trase: {(activeDetailPlan.cities || ['Tokyo', 'Kyoto', 'Osaka']).join(' ➔ ')}
+              {isEn ? 'Route stops:' : 'Zastávky na trase:'} {(dp.cities || ['Tokyo', 'Kyoto', 'Osaka']).join(' ➔ ')}
             </p>
             <div 
               ref={routeMapRef} 
@@ -692,9 +829,9 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
           </div>
 
           {/* Day-by-Day Program */}
-          <h2><i className="fa-solid fa-list-check" style={{ color: 'var(--accent-color)' }}></i> Program zájezdu den po dni</h2>
+          <h2><i className="fa-solid fa-list-check" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Day-by-Day Itinerary' : 'Program zájezdu den po dni'}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginTop: '1.5rem' }}>
-            {(activeDetailPlan.days || []).map((d, idx) => (
+            {(dp.days || []).map((d, idx) => (
               <div key={idx} className="glass" style={{ padding: '1.5rem', borderRadius: '16px', borderLeft: '4px solid var(--accent-color)' }}>
                 <span style={{ color: 'var(--accent-color)', fontWeight: 'bold', fontSize: '0.9rem' }}>{d.day}</span>
                 <h3 style={{ fontSize: '1.2rem', margin: '0.3rem 0' }}>{d.title}</h3>
@@ -703,15 +840,15 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
             ))}
           </div>
 
-          {(!activeDetailPlan.dates || activeDetailPlan.dates.length === 0) ? (
+          {(!dp.dates || dp.dates.length === 0) ? (
             <div style={{ marginTop: '3rem', textAlign: 'center', color: '#e74c3c' }}>
-              <h3>Termíny pro tento zájezd jsou v tuto chvíli vyprodané</h3>
-              <p style={{ color: 'var(--text-muted)' }}>Sledujte naše stránky, brzy vypíšeme nové termíny!</p>
+              <h3>{isEn ? 'Dates for this trip are currently sold out' : 'Termíny pro tento zájezd jsou v tuto chvíli vyprodané'}</h3>
+              <p style={{ color: 'var(--text-muted)' }}>{isEn ? 'Stay tuned—we will announce new dates soon!' : 'Sledujte naše stránky, brzy vypíšeme nové termíny!'}</p>
             </div>
           ) : (
             <div style={{ marginTop: '3rem', textAlign: 'center' }}>
-              <button className="btn btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }} onClick={(e) => openBooking(activeDetailPlan, activeDetailPlan.dates[0], e)}>
-                <i className="fa-solid fa-paper-plane"></i> Mám zájem o tento zájezd
+              <button className="btn btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }} onClick={(e) => openBooking(dp, dp.dates[0], e)}>
+                <i className="fa-solid fa-paper-plane"></i> {isEn ? 'Book This Trip' : 'Mám zájem o tento zájezd'}
               </button>
             </div>
           )}
@@ -720,7 +857,8 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
           <TripReviews planId={activeDetailPlan.id} />
 
         </div>
-      ) : (
+        );
+      })() : (
         <>
           <div className="glass planner-header" style={{ textAlign: 'center', padding: '2rem', borderRadius: '20px', marginBottom: '2rem' }}>
             <h1 style={{ fontSize: '2.4rem' }}>{t('planner.header.title', 'Vyberte si váš vysněný plán')}</h1>
@@ -734,37 +872,41 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
               onClick={() => setIsCustomBuilderOpen(true)}
               style={{ padding: '0.75rem 1.6rem', fontSize: '0.95rem' }}
             >
-              <i className="fa-solid fa-wand-magic-sparkles"></i> Sestavit vlastní itinerář (AI Plánovač)
+              <i className="fa-solid fa-wand-magic-sparkles"></i> {isEn ? 'Build Custom Itinerary (AI Planner)' : 'Sestavit vlastní itinerář (AI Plánovač)'}
             </button>
           </div>
 
           <div className="itinerary-section">
             <div className="filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
               <div className="filter-group" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {['vše', 'pro nováčky', 'zábava', 'poznávací', 'adrenalin', 'oblíbené'].map(f => (
+                {['vše', 'pro nováčky', 'zábava', 'poznávací', 'adrenalin', 'oblíbené'].map(f => {
+                  const label = translateTag(f);
+                  return (
                   <button 
                     key={f}
                     className={`filter-btn ${filter === f ? 'active' : ''}`}
                     onClick={() => setFilter(f)}
                   >
-                    {f === 'oblíbené' ? <><i className="fa-solid fa-heart" style={{ color: '#e74c3c' }}></i> Oblíbené</> : f.charAt(0).toUpperCase() + f.slice(1)}
+                    {f === 'oblíbené' ? <><i className="fa-solid fa-heart" style={{ color: '#e74c3c' }}></i> {isEn ? 'Favorites' : 'Oblíbené'}</> : label.charAt(0).toUpperCase() + label.slice(1)}
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <i className="fa-solid fa-sort-amount-down" style={{ color: 'var(--accent-color)' }}></i>
-                <select aria-label="Řazení zájezdů" className="sort-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  <option value="default">Doporučené</option>
-                  <option value="price-asc">Nejlevnější</option>
-                  <option value="price-desc">Nejdražší</option>
+                <select aria-label={isEn ? 'Sort trips' : 'Řazení zájezdů'} className="sort-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                  <option value="default">{isEn ? 'Recommended' : 'Doporučené'}</option>
+                  <option value="price-asc">{isEn ? 'Lowest Price' : 'Nejlevnější'}</option>
+                  <option value="price-desc">{isEn ? 'Highest Price' : 'Nejdražší'}</option>
                 </select>
               </div>
             </div>
 
             {/* Itinerary Cards Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem' }}>
-              {filteredItineraries.map(item => {
+              {filteredItineraries.map(rawItem => {
+                const item = localizePlan(rawItem);
                 const isSoldOut = !item.dates || item.dates.length === 0;
 
                 return (
@@ -774,8 +916,8 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                     tabIndex={0}
                     className="glass" 
                     style={{ borderRadius: '20px', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.3s' }}
-                    onClick={() => setActiveDetailPlan(item)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveDetailPlan(item); } }}
+                    onClick={() => setActiveDetailPlan(rawItem)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveDetailPlan(rawItem); } }}
                   >
                     <div style={{ position: 'relative', height: '200px', background: '#222', overflow: 'hidden' }}>
                       <img src={item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -783,13 +925,13 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                       
                       {isSoldOut && (
                         <span style={{ position: 'absolute', bottom: 15, left: 15, background: 'rgba(231,76,60,0.95)', color: '#fff', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', zIndex: 2 }}>
-                          <i className="fa-solid fa-circle-exclamation"></i> Plně obsazeno
+                          <i className="fa-solid fa-circle-exclamation"></i> {isEn ? 'Sold Out' : 'Plně obsazeno'}
                         </span>
                       )}
 
                       <button 
                         type="button"
-                        aria-label={favorites.includes(item.id) ? 'Odebrat z oblíbených' : 'Přidat do oblíbených'}
+                        aria-label={favorites.includes(item.id) ? (isEn ? 'Remove from favorites' : 'Odebrat z oblíbených') : (isEn ? 'Add to favorites' : 'Přidat do oblíbených')}
                         aria-pressed={favorites.includes(item.id)}
                         onClick={(e) => toggleFavorite(item.id, e)} 
                         style={{ position: 'absolute', top: 15, right: 15, zIndex: 2, background: 'rgba(0,0,0,0.5)', border: 'none', color: favorites.includes(item.id) ? '#e74c3c' : '#fff', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer' }}
@@ -806,12 +948,12 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                         {/* Interactive Dates Pills / Sold Out Notice */}
                         {isSoldOut ? (
                           <div style={{ margin: '0.8rem 0', background: 'rgba(231,76,60,0.12)', padding: '0.6rem 0.8rem', borderRadius: '10px', border: '1px solid rgba(231,76,60,0.3)', color: '#ff6b6b', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <i className="fa-solid fa-circle-exclamation"></i> Termíny jsou momentálně plně obsazeny
+                            <i className="fa-solid fa-circle-exclamation"></i> {isEn ? 'All dates are currently sold out' : 'Termíny jsou momentálně plně obsazeny'}
                           </div>
                         ) : (
                           <div style={{ margin: '0.8rem 0' }}>
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                              <i className="fa-regular fa-calendar-check" style={{ color: 'var(--accent-color)' }}></i> Vyberte si termín:
+                              <i className="fa-regular fa-calendar-check" style={{ color: 'var(--accent-color)' }}></i> {isEn ? 'Choose a date:' : 'Vyberte si termín:'}
                             </span>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                               {item.dates.map((d, dIdx) => (
@@ -833,7 +975,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                                     cursor: 'pointer',
                                     transition: 'all 0.2s'
                                   }}
-                                  title="Klikněte pro rezervaci na tento termín"
+                                  title={isEn ? 'Click to book this date' : 'Klikněte pro rezervaci na tento termín'}
                                 >
                                   📅 {d}
                                 </button>
@@ -856,7 +998,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                               disabled
                               style={{ flex: 1, background: 'rgba(255,255,255,0.1)', color: '#888', cursor: 'not-allowed' }}
                             >
-                              Obsazeno
+                              {isEn ? 'Sold Out' : 'Obsazeno'}
                             </button>
                           ) : (
                             <button 
@@ -864,14 +1006,14 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                               style={{ flex: 1 }}
                               onClick={(e) => openBooking(item, item.dates[0], e)}
                             >
-                              <i className="fa-solid fa-calendar-check"></i> Rezervovat
+                              <i className="fa-solid fa-calendar-check"></i> {isEn ? 'Book Now' : 'Rezervovat'}
                             </button>
                           )}
                           <button 
                             className="btn" 
                             style={{ background: compareList.includes(item.id) ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid var(--glass-border)' }}
                             onClick={(e) => toggleCompare(item.id, e)}
-                            title="Porovnat"
+                            title={isEn ? 'Compare' : 'Porovnat'}
                           >
                             <i className="fa-solid fa-scale-balanced"></i>
                           </button>
@@ -889,46 +1031,46 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
       {/* Booking & Payment Wizard Modal */}
       {isBookingOpen && (
-        <div className="booking-modal active" role="dialog" aria-modal="true" aria-label="Rezervace a platba zájezdu" onClick={() => setIsBookingOpen(false)}>
+        <div className="booking-modal active" role="dialog" aria-modal="true" aria-label={isEn ? 'Trip Booking & Payment' : 'Rezervace a platba zájezdu'} onClick={() => setIsBookingOpen(false)}>
           <div className="glass modal-content" style={{ maxWidth: '620px' }} onClick={e => e.stopPropagation()}>
-            <button type="button" aria-label="Zavřít" className="close-modal" onClick={() => setIsBookingOpen(false)}><i className="fa-solid fa-xmark"></i></button>
-            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-color)' }}>Rezervace & Platba zájezdu</h3>
+            <button type="button" aria-label={isEn ? 'Close' : 'Zavřít'} className="close-modal" onClick={() => setIsBookingOpen(false)}><i className="fa-solid fa-xmark"></i></button>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--accent-color)' }}>{isEn ? 'Trip Booking & Payment' : 'Rezervace & Platba zájezdu'}</h3>
 
             <div className="step-indicator" style={{ marginBottom: '1.5rem' }}>
               <div className={`step-dot ${bookingStep >= 1 ? 'active' : ''}`}>
                 <div className="step-dot-circle">1</div>
-                <div className="step-dot-label">Termín</div>
+                <div className="step-dot-label">{isEn ? 'Date' : 'Termín'}</div>
               </div>
               <div className="step-line"></div>
               <div className={`step-dot ${bookingStep >= 2 ? 'active' : ''}`}>
                 <div className="step-dot-circle">2</div>
-                <div className="step-dot-label">Údaje</div>
+                <div className="step-dot-label">{isEn ? 'Details' : 'Údaje'}</div>
               </div>
               <div className="step-line"></div>
               <div className={`step-dot ${bookingStep >= 3 ? 'active' : ''}`}>
                 <div className="step-dot-circle">3</div>
-                <div className="step-dot-label">Platba</div>
+                <div className="step-dot-label">{isEn ? 'Payment' : 'Platba'}</div>
               </div>
             </div>
 
             {bookingStep === 4 || bookingSuccess ? (
               <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
                 <i className="fa-solid fa-circle-check" style={{ fontSize: '3.5rem', color: '#2ecc71', marginBottom: '1rem' }}></i>
-                <h2>Rezervace byla úspěšně přijata!</h2>
+                <h2>{isEn ? 'Reservation Confirmed!' : 'Rezervace byla úspěšně přijata!'}</h2>
                 <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontSize: '1.05rem' }}>
-                  Děkujeme! Potvrzení rezervace a pokyny byly odeslány na e-mail <strong>{bookEmail}</strong>.
+                  {isEn ? <>Thank you! Confirmation and instructions have been sent to <strong>{bookEmail}</strong>.</> : <>Děkujeme! Potvrzení rezervace a pokyny byly odeslány na e-mail <strong>{bookEmail}</strong>.</>}
                 </p>
 
                 {paymentMethod === 'qr' && (
                   <div className="glass" style={{ margin: '1.5rem 0', padding: '1.2rem', textAlign: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '16px' }}>
-                    <h4>Instrukce k platbě převodem:</h4>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0.4rem 0' }}>Číslo účtu: <strong>2800123456/2010</strong> &bull; VS: <strong>2026001</strong></p>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--accent-color)', fontWeight: 'bold' }}>Částka k úhradě: {selectedPlanPrice.toLocaleString('cs-CZ')} Kč</p>
+                    <h4>{isEn ? 'Bank Transfer Instructions:' : 'Instrukce k platbě převodem:'}</h4>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0.4rem 0' }}>{isEn ? 'Account:' : 'Číslo účtu:'} <strong>2800123456/2010</strong> &bull; VS: <strong>2026001</strong></p>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--accent-color)', fontWeight: 'bold' }}>{isEn ? 'Amount due:' : 'Částka k úhradě:'} {selectedPlanPrice.toLocaleString('cs-CZ')} Kč</p>
                   </div>
                 )}
 
                 <button className="btn btn-primary" style={{ marginTop: '1rem', padding: '0.8rem 2rem' }} onClick={() => setIsBookingOpen(false)}>
-                  Zavřít okno
+                  {isEn ? 'Close' : 'Zavřít okno'}
                 </button>
               </div>
             ) : (
@@ -938,21 +1080,22 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                   <div className="step-content active">
                     <div className="booking-summary-box" style={{ background: 'rgba(255,255,255,0.04)', padding: '1.2rem', borderRadius: '14px', marginBottom: '1.5rem' }}>
                       <div className="booking-summary-row" style={{ marginBottom: '0.5rem' }}>
-                        <span><i className="fa-solid fa-map-location-dot"></i> Zájezd</span>
+                        <span><i className="fa-solid fa-map-location-dot"></i> {isEn ? 'Trip' : 'Zájezd'}</span>
                         <strong style={{ color: 'var(--accent-color)' }}>{selectedPlan}</strong>
                       </div>
                       <div className="booking-summary-row">
-                        <span><i className="fa-solid fa-tag"></i> Cena</span>
+                        <span><i className="fa-solid fa-tag"></i> {isEn ? 'Price' : 'Cena'}</span>
                         <strong>{selectedPlanPrice.toLocaleString('cs-CZ')} Kč</strong>
                       </div>
                     </div>
 
                     <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>
-                        <i className="fa-regular fa-calendar-days"></i> Vyberte termín odletu:
+                      <label htmlFor="booking-date-select" style={{ fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>
+                        <i className="fa-regular fa-calendar-days"></i> {isEn ? 'Select departure date:' : 'Vyberte termín odletu:'}
                       </label>
                       {availableDatesForBooking.length > 0 ? (
                         <select 
+                          id="booking-date-select"
                           value={selectedDate} 
                           onChange={e => setSelectedDate(e.target.value)}
                           style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: '#fff' }}
@@ -963,6 +1106,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                         </select>
                       ) : (
                         <input 
+                          id="booking-date-select"
                           type="text" 
                           value={selectedDate} 
                           onChange={e => setSelectedDate(e.target.value)} 
@@ -973,7 +1117,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
                     <div className="step-nav" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
                       <button type="button" className="btn btn-primary" onClick={() => setBookingStep(2)}>
-                        Pokračovat k údajům <i className="fa-solid fa-arrow-right"></i>
+                        {isEn ? 'Continue to Details' : 'Pokračovat k údajům'} <i className="fa-solid fa-arrow-right"></i>
                       </button>
                     </div>
                   </div>
@@ -984,29 +1128,29 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                   <div className="step-content active">
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '1rem' }}>
                       <div className="form-group">
-                        <label>Jméno a Příjmení</label>
-                        <input type="text" required value={bookName} onChange={e => setBookName(e.target.value)} placeholder="Jan Novák" style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }} />
+                        <label htmlFor="book-name">{isEn ? 'Full Name' : 'Jméno a příjmení'}</label>
+                        <input id="book-name" type="text" required value={bookName} onChange={e => setBookName(e.target.value)} placeholder="Jan Novák" style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }} />
                       </div>
                       <div className="form-group">
-                        <label>Věk</label>
-                        <input type="number" required value={bookAge} onChange={e => setBookAge(e.target.value)} placeholder="30" style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }} />
+                        <label htmlFor="book-age">{isEn ? 'Age' : 'Věk'}</label>
+                        <input id="book-age" type="number" required value={bookAge} onChange={e => setBookAge(e.target.value)} placeholder="30" style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }} />
                       </div>
                     </div>
                     <div className="form-group" style={{ marginBottom: '1rem' }}>
-                      <label>E-mail pro zaslání potvrzení</label>
-                      <input type="email" required value={bookEmail} onChange={e => setBookEmail(e.target.value)} placeholder="jan@email.cz" style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }} />
+                      <label htmlFor="book-email">{isEn ? 'E-mail for confirmation' : 'E-mail pro zaslání potvrzení'}</label>
+                      <input id="book-email" type="email" required value={bookEmail} onChange={e => setBookEmail(e.target.value)} placeholder="jan@email.cz" style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }} />
                     </div>
                     <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                      <label>Telefonní číslo</label>
-                      <input type="tel" required value={bookPhone} onChange={e => setBookPhone(e.target.value)} placeholder="+420 123 456 789" style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }} />
+                      <label htmlFor="book-phone">{isEn ? 'Phone Number' : 'Telefonní číslo'}</label>
+                      <input id="book-phone" type="tel" required value={bookPhone} onChange={e => setBookPhone(e.target.value)} placeholder="+420 123 456 789" style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }} />
                     </div>
 
                     <div className="step-nav" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
                       <button type="button" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }} onClick={() => setBookingStep(1)}>
-                        <i className="fa-solid fa-arrow-left"></i> Zpět
+                        <i className="fa-solid fa-arrow-left"></i> {isEn ? 'Back' : 'Zpět'}
                       </button>
-                      <button type="button" className="btn btn-primary" onClick={() => { if(bookName && bookEmail && bookPhone) setBookingStep(3); else alert('Vyplňte prosím všechna pole!'); }}>
-                        K platbě <i className="fa-solid fa-arrow-right"></i>
+                      <button type="button" className="btn btn-primary" onClick={() => { if(bookName && bookEmail && bookPhone) setBookingStep(3); else alert(isEn ? 'Please fill in all fields!' : 'Vyplňte prosím všechna pole!'); }}>
+                        {isEn ? 'To Payment' : 'K platbě'} <i className="fa-solid fa-arrow-right"></i>
                       </button>
                     </div>
                   </div>
@@ -1015,7 +1159,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                 {/* Step 3: Payment Choice */}
                 {bookingStep === 3 && (
                   <div className="step-content active">
-                    <h4 style={{ marginBottom: '1rem' }}>Zvolte způsob platby</h4>
+                    <h4 style={{ marginBottom: '1rem' }}>{isEn ? 'Select Payment Method' : 'Zvolte způsob platby'}</h4>
 
                     <div style={{ display: 'flex', gap: '10px', marginBottom: '1.2rem' }}>
                       <button 
@@ -1024,7 +1168,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                         onClick={() => setPaymentMethod('stripe')}
                         style={{ flex: 1, padding: '0.7rem' }}
                       >
-                        <i className="fa-brands fa-stripe fa-lg" style={{ color: '#6772e5' }}></i> Kartou Online (Stripe)
+                        <i className="fa-brands fa-stripe fa-lg" style={{ color: '#6772e5' }}></i> {isEn ? 'Card Online (Stripe)' : 'Kartou Online (Stripe)'}
                       </button>
                       <button 
                         type="button" 
@@ -1032,24 +1176,24 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                         onClick={() => setPaymentMethod('qr')}
                         style={{ flex: 1, padding: '0.7rem' }}
                       >
-                        <i className="fa-solid fa-qrcode"></i> QR Platba / Převod
+                        <i className="fa-solid fa-qrcode"></i> {isEn ? 'QR Payment / Transfer' : 'QR Platba / Převod'}
                       </button>
                     </div>
 
                     {paymentMethod === 'stripe' ? (
                       <div className="glass" style={{ padding: '1.2rem', borderRadius: '14px', background: 'rgba(255,255,255,0.03)' }}>
                         <div className="form-group" style={{ marginBottom: '0.8rem' }}>
-                          <label style={{ fontSize: '0.85rem' }}>Číslo karty</label>
-                          <input type="text" value={cardNumber} onChange={e => setCardNumber(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.4)', color: '#fff' }} />
+                          <label htmlFor="card-num" style={{ fontSize: '0.85rem' }}>{isEn ? 'Card Number' : 'Číslo karty'}</label>
+                          <input id="card-num" type="text" value={cardNumber} onChange={e => setCardNumber(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.4)', color: '#fff' }} />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                           <div className="form-group">
-                            <label style={{ fontSize: '0.85rem' }}>Platnost</label>
-                            <input type="text" value={cardExpiry} onChange={e => setCardExpiry(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.4)', color: '#fff' }} />
+                            <label htmlFor="card-exp" style={{ fontSize: '0.85rem' }}>{isEn ? 'Expiry' : 'Platnost'}</label>
+                            <input id="card-exp" type="text" value={cardExpiry} onChange={e => setCardExpiry(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.4)', color: '#fff' }} />
                           </div>
                           <div className="form-group">
-                            <label style={{ fontSize: '0.85rem' }}>CVC / CVV</label>
-                            <input type="password" value={cardCvc} onChange={e => setCardCvc(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.4)', color: '#fff' }} />
+                            <label htmlFor="card-cvc" style={{ fontSize: '0.85rem' }}>CVC / CVV</label>
+                            <input id="card-cvc" type="password" value={cardCvc} onChange={e => setCardCvc(e.target.value)} style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.4)', color: '#fff' }} />
                           </div>
                         </div>
                       </div>
@@ -1060,17 +1204,17 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                           <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=SPD*1.0*ACC:CZ6808000000001234567890*AM:49900.00*CC:CZK*MSG:TedovaAsia" alt="QR Platba" style={{ width: '130px', height: '130px' }} />
                         </div>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                          Naskenujte QR kód ve své bankovní aplikaci (Česká spořitelna, AirBank, ČSOB, KB atd.).
+                          {isEn ? 'Scan the QR code in your mobile banking app.' : 'Naskenujte QR kód ve své bankovní aplikaci (Česká spořitelna, AirBank, ČSOB, KB atd.).'}
                         </p>
                       </div>
                     )}
 
                     <div className="step-nav" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
                       <button type="button" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }} onClick={() => setBookingStep(2)}>
-                        <i className="fa-solid fa-arrow-left"></i> Zpět
+                        <i className="fa-solid fa-arrow-left"></i> {isEn ? 'Back' : 'Zpět'}
                       </button>
                       <button type="submit" className="btn btn-primary" disabled={isProcessingPayment} style={{ padding: '0.8rem 1.8rem' }}>
-                        {isProcessingPayment ? <><i className="fa-solid fa-spinner fa-spin"></i> Zpracovávám...</> : <><i className="fa-solid fa-lock"></i> Zaplatit {selectedPlanPrice.toLocaleString('cs-CZ')} Kč</>}
+                        {isProcessingPayment ? <><i className="fa-solid fa-spinner fa-spin"></i> {isEn ? 'Processing...' : 'Zpracovávám...'}</> : <><i className="fa-solid fa-lock"></i> {isEn ? 'Pay' : 'Zaplatit'} {selectedPlanPrice.toLocaleString('cs-CZ')} Kč</>}
                       </button>
                     </div>
                   </div>
@@ -1270,58 +1414,59 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
       {/* Custom Itinerary Builder Modal */}
       {isCustomBuilderOpen && (
-        <div className="booking-modal active" role="dialog" aria-modal="true" aria-label="Sestavit vlastní itinerář" onClick={() => setIsCustomBuilderOpen(false)}>
+        <div className="booking-modal active" role="dialog" aria-modal="true" aria-label={isEn ? 'Build Custom Itinerary' : 'Sestavit vlastní itinerář'} onClick={() => setIsCustomBuilderOpen(false)}>
           <div className="glass modal-content" style={{ maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-            <button type="button" aria-label="Zavřít" className="close-modal" onClick={() => setIsCustomBuilderOpen(false)}><i className="fa-solid fa-xmark"></i></button>
+            <button type="button" aria-label={isEn ? 'Close' : 'Zavřít'} className="close-modal" onClick={() => setIsCustomBuilderOpen(false)}><i className="fa-solid fa-xmark"></i></button>
             <h3 style={{ marginBottom: '0.4rem', color: 'var(--accent-color)' }}>
-              <i className="fa-solid fa-wand-magic-sparkles"></i> Sestavit vlastní itinerář
+              <i className="fa-solid fa-wand-magic-sparkles"></i> {isEn ? 'Build Custom Itinerary' : 'Sestavit vlastní itinerář'}
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.2rem' }}>
-              Nakombinujte si města, délku a styl cesty a nechte si vygenerovat program pomocí AI.
+              {isEn ? 'Combine cities, duration, and travel style, and let AI generate your day-by-day program.' : 'Nakombinujte si města, délku a styl cesty a nechte si vygenerovat program pomocí AI.'}
             </p>
 
             <form onSubmit={handleSaveCustomItinerary}>
               <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label>Název vašeho itineráře</label>
+                <label htmlFor="custom-title">{isEn ? 'Your Itinerary Title' : 'Název vašeho itineráře'}</label>
                 <input
+                  id="custom-title"
                   type="text"
                   value={customTitle}
                   onChange={e => setCustomTitle(e.target.value)}
-                  placeholder="Např. Moje jarní cesta po Japonsku"
+                  placeholder={isEn ? 'e.g. My Spring Trip to Japan' : 'Např. Moje jarní cesta po Japonsku'}
                   style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '1rem' }}>
                 <div className="form-group">
-                  <label>Země</label>
-                  <select value={customCountry} onChange={e => setCustomCountry(e.target.value)} style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: '#fff' }}>
-                    <option value="Japonsko 🇯🇵">Japonsko 🇯🇵</option>
-                    <option value="Jižní Korea 🇰🇷">Jižní Korea 🇰🇷</option>
+                  <label htmlFor="custom-country">{isEn ? 'Country' : 'Země'}</label>
+                  <select id="custom-country" value={customCountry} onChange={e => setCustomCountry(e.target.value)} style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: '#fff' }}>
+                    <option value="Japonsko 🇯🇵">{isEn ? 'Japan 🇯🇵' : 'Japonsko 🇯🇵'}</option>
+                    <option value="Jižní Korea 🇰🇷">{isEn ? 'South Korea 🇰🇷' : 'Jižní Korea 🇰🇷'}</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Délka cesty</label>
-                  <select value={customDuration} onChange={e => setCustomDuration(e.target.value)} style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: '#fff' }}>
-                    <option value="7 dní">7 dní</option>
-                    <option value="10 dní">10 dní</option>
-                    <option value="12 dní">12 dní</option>
-                    <option value="14 dní">14 dní</option>
+                  <label htmlFor="custom-duration">{isEn ? 'Duration' : 'Délka cesty'}</label>
+                  <select id="custom-duration" value={customDuration} onChange={e => setCustomDuration(e.target.value)} style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: '#fff' }}>
+                    <option value="7 dní">{isEn ? '7 days' : '7 dní'}</option>
+                    <option value="10 dní">{isEn ? '10 days' : '10 dní'}</option>
+                    <option value="12 dní">{isEn ? '12 days' : '12 dní'}</option>
+                    <option value="14 dní">{isEn ? '14 days' : '14 dní'}</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Styl</label>
-                  <select value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: '#fff' }}>
-                    <option value="poznávací">Poznávací</option>
-                    <option value="pro nováčky">Pro nováčky</option>
-                    <option value="zábava">Zábava</option>
-                    <option value="adrenalin">Adrenalin</option>
+                  <label htmlFor="custom-tag">{isEn ? 'Style' : 'Styl'}</label>
+                  <select id="custom-tag" value={customTag} onChange={e => setCustomTag(e.target.value)} style={{ width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'rgba(15,15,25,0.9)', color: '#fff' }}>
+                    <option value="poznávací">{isEn ? 'Sightseeing' : 'Poznávací'}</option>
+                    <option value="pro nováčky">{isEn ? 'For beginners' : 'Pro nováčky'}</option>
+                    <option value="zábava">{isEn ? 'Entertainment' : 'Zábava'}</option>
+                    <option value="adrenalin">{isEn ? 'Adrenaline' : 'Adrenalin'}</option>
                   </select>
                 </div>
               </div>
 
               <div className="form-group" style={{ marginBottom: '1.2rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem' }}>Zastávky na trase (vykreslí se na interaktivní mapě):</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem' }}>{isEn ? 'Route stops (displayed on the interactive map):' : 'Zastávky na trase (vykreslí se na interaktivní mapě):'}</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {Object.keys(cityCoords).map(city => {
                     const active = customCities.includes(city);
@@ -1348,7 +1493,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
               </div>
 
               <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                <label style={{ fontWeight: 600 }}>Program den po dni:</label>
+                <label style={{ fontWeight: 600 }}>{isEn ? 'Day-by-Day Program:' : 'Program den po dni:'}</label>
                 <button
                   type="button"
                   className="btn"
@@ -1356,7 +1501,7 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
                   disabled={isGeneratingAiPlan}
                   style={{ background: 'rgba(239,35,60,0.18)', border: '1px solid var(--accent-color)', color: '#fff', padding: '6px 14px', fontSize: '0.85rem' }}
                 >
-                  {isGeneratingAiPlan ? <><i className="fa-solid fa-spinner fa-spin"></i> Generuji přes Gemini AI...</> : <><i className="fa-solid fa-robot"></i> Vygenerovat program pomocí AI</>}
+                  {isGeneratingAiPlan ? <><i className="fa-solid fa-spinner fa-spin"></i> {isEn ? 'Generating with Gemini AI...' : 'Generuji přes Gemini AI...'}</> : <><i className="fa-solid fa-robot"></i> {isEn ? 'Generate Program with AI' : 'Vygenerovat program pomocí AI'}</>}
                 </button>
               </div>
 
@@ -1377,10 +1522,10 @@ Způsob platby: ${paymentMethod === 'stripe' ? 'Online karta (Stripe) - Zaplacen
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button type="button" className="btn" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff' }} onClick={() => setIsCustomBuilderOpen(false)}>
-                  Zrušit
+                  {isEn ? 'Cancel' : 'Zrušit'}
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  <i className="fa-solid fa-check"></i> Uložit a zobrazit itinerář
+                  <i className="fa-solid fa-check"></i> {isEn ? 'Save & View Itinerary' : 'Uložit a zobrazit itinerář'}
                 </button>
               </div>
             </form>
